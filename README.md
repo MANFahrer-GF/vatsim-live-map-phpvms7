@@ -78,6 +78,25 @@ var OWM_API_KEY = "YOUR_OPENWEATHERMAP_API_KEY_HERE";
 ### Popup Design
 - Card-style popups for pilots, controllers and FIR sectors
 - Airline logos loaded from your own phpVMS database (always current)
+- Badge legend built into the VATSIM panel
+
+### Airline Logos in VATSIM Popups
+
+When a VATSIM pilot's callsign matches an airline in your phpVMS database, their logo is automatically shown in the popup.
+
+**How it works:**
+The map reads the first 3 letters of the VATSIM callsign (the ICAO airline code, e.g. `DLH` from `DLH187`) and looks for a matching airline in your phpVMS database. If found **and** that airline has a logo uploaded, it is displayed in the popup.
+
+**Requirements:**
+1. The airline must be created in your phpVMS Admin → **Airlines**
+2. The airline's **ICAO code** must match the VATSIM callsign prefix (e.g. `DLH` for Lufthansa)
+3. A **logo must be uploaded** for that airline in phpVMS
+
+**Example:**
+- VATSIM flight `DLH187` → ICAO prefix `DLH` → phpVMS finds airline "Lufthansa" with ICAO `DLH` → logo shown ✅
+- VATSIM flight `RYR123` → ICAO prefix `RYR` → airline not in your phpVMS database → no logo shown, popup works normally ✅
+
+> This means logos only appear for airlines you have configured in your VA. This is intentional — your phpVMS database always has up-to-date, correct logos since you manage them yourself. External logo CDNs often have outdated or incorrect logos (e.g. old Lufthansa yellow crane instead of the current blue one).
 
 ---
 
