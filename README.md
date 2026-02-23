@@ -100,7 +100,85 @@ The map reads the first 3 letters of the VATSIM callsign (the ICAO airline code,
 
 ---
 
-## ⚙️ Configuration
+## 🎛️ VATSIM Control Panel — Button Guide
+
+The VATSIM panel is displayed in the bottom-right corner of the map. Here is what each button does:
+
+---
+
+### ✈️ Pilots
+**Toggles the display of all VATSIM pilots on the map.**
+
+- When active: every pilot currently connected to VATSIM and airborne is shown as a small blue aircraft icon, rotated according to their heading
+- Clicking a pilot marker opens a popup showing: callsign, route (departure › arrival), aircraft type, altitude, speed, heading and pilot name
+- If the airline exists in your phpVMS database with a logo, the logo is shown at the top of the popup
+- Clicking a pilot also draws a **dashed red line** from the aircraft to its destination airport
+
+> Turning this off is recommended when you only want to monitor controllers — with 800+ pilots worldwide the map can get very busy.
+
+---
+
+### 🎧 Controllers
+**Toggles the display of all active VATSIM ATC stations on the map.**
+
+- Each airport with active controllers gets a marker showing color-coded badges (see badge legend below)
+- Clicking an airport marker opens a popup with all active controllers at that airport, their frequencies, ratings, and how long they have been online
+- ATIS information is shown collapsed — click **"Show full ATIS"** to expand the full text
+- TRACON / Approach Control stations that are not tied to a specific airport are automatically placed at the nearest airport within 80km
+
+> This layer is active by default on page load.
+
+---
+
+### 🗺️ FIR Sectors
+**Toggles the display of FIR (Flight Information Region) and UIR sector boundaries.**
+
+- Draws the airspace boundaries for active Center / FIR controllers as colored, semi-transparent polygons on the map
+- Each polygon is clickable and shows the controller info for that sector
+- Multiple sub-sectors (e.g. EDMM-GER, EDMM-HOF) are shown as separate polygons but share one popup
+- The sector label (callsign + frequency) is shown at the center of the largest sub-sector
+
+> Very useful for seeing at a glance which regions have active radar coverage.
+
+---
+
+### 🎯 Follow Flight
+**Controls whether the map automatically follows your own VA aircraft.**
+
+- **Active (green):** the map continuously pans to keep your own aircraft centered as it moves
+- **Inactive (grey — "Free Scroll"):** the map stays where you left it, you can scroll and zoom freely without the camera jumping back
+- You can still zoom in and out freely regardless of whether Follow Flight is on or off
+- Only affects your own VA aircraft (the white icon with red stripe), not VATSIM traffic
+
+> Useful when you want to monitor your own flight without losing your view of the surrounding traffic.
+
+---
+
+### 📍 Route Line (click on any aircraft)
+**Not a button — activated by clicking on any aircraft marker.**
+
+- Click any VATSIM pilot or your own VA aircraft → a dashed red line is drawn from the aircraft to its filed destination airport
+- The destination ICAO code is shown as a small label at the airport
+- Click anywhere on the map to remove the line
+
+---
+
+### 🌦️ Weather Layers (bottom-left panel)
+
+| Button | Shows |
+|--------|-------|
+| **Clouds** | Cloud coverage overlay |
+| **Radar** | Precipitation radar |
+| **Storms** | Thunderstorm cells |
+| **Wind** | Wind speed & direction |
+| **Temp** | Temperature overlay |
+| **Combo** | Clouds + precipitation combined |
+| **Dark map** | Switches the base map to a dark/night style |
+| **Opacity slider** | Adjusts transparency of the active weather layer |
+
+> Requires a free OpenWeatherMap API key — see setup instructions above.
+
+---
 
 Find these variables near the top of the `<script>` block:
 
