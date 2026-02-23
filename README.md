@@ -152,14 +152,15 @@ The VATSIM panel is displayed in the bottom-right corner of the map. Here is wha
 ---
 
 ### 🎯 Follow Flight
-**Controls whether the map automatically follows your own VA aircraft.**
+**Controls whether the map automatically adjusts to show all active VA flights.**
 
-- **Active (green):** the map continuously pans to keep your own aircraft centered as it moves
-- **Inactive (grey — "Free Scroll"):** the map stays where you left it, you can scroll and zoom freely without the camera jumping back
-- You can still zoom in and out freely regardless of whether Follow Flight is on or off
-- Only affects your own VA aircraft (the white icon with red stripe), not VATSIM traffic
+- **Active (green — "Follow Flight"):** phpVMS controls the map view automatically
+  - If **one** VA pilot is online: the map pans to keep that aircraft in view
+  - If **multiple** VA pilots are online simultaneously: the map zooms out and adjusts so **all VA aircraft are visible** at the same time
+  - The view updates automatically as aircraft move
+- **Inactive (grey — "Free Scroll"):** the map stays exactly where you left it — you can scroll, pan and zoom freely without the camera jumping back
 
-> Useful when you want to monitor your own flight without losing your view of the surrounding traffic.
+> This button does **not** follow a single specific pilot — it always tries to show **all currently active VA flights** in one view. If you want to look at a specific area (e.g. VATSIM traffic in Europe) simply deactivate Follow Flight first.
 
 ---
 
