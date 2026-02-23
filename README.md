@@ -10,6 +10,8 @@ A fully featured live map override for [phpVMS 7](https://github.com/phpvms/phpv
 
 **[Live Karte - German Sky Group](https://german-sky-group.eu/livemap)**
 
+![VATSIM Live Map Screenshot](screenshot.png)
+
 ---
 
 ## 📦 Installation
