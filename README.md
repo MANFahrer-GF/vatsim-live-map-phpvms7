@@ -158,9 +158,32 @@ The VATSIM panel is displayed in the bottom-right corner of the map. Here is wha
   - If **one** VA pilot is online: the map pans to keep that aircraft in view
   - If **multiple** VA pilots are online simultaneously: the map zooms out and adjusts so **all VA aircraft are visible** at the same time
   - The view updates automatically as aircraft move
+  - If **no VA flights are active**: the map returns to the default position and zoom level set in the phpVMS Admin Panel after a short time
 - **Inactive (grey — "Free Scroll"):** the map stays exactly where you left it — you can scroll, pan and zoom freely without the camera jumping back
 
 > This button does **not** follow a single specific pilot — it always tries to show **all currently active VA flights** in one view. If you want to look at a specific area (e.g. VATSIM traffic in Europe) simply deactivate Follow Flight first.
+
+---
+
+### ⚙️ Default Map Position (Admin Panel)
+
+The default center and zoom level when no VA flights are active is configured in your phpVMS Admin Panel under **Admin → ACARS**:
+
+| Setting | Description |
+|---------|-------------|
+| **Center Coords** | Where the map returns to when no flights are active (`LAT,LON`) |
+| **Default Zoom** | Initial zoom level |
+| **Live Time** | How many hours old a flight can be before it disappears from the map (`0` = only in-progress flights) |
+| **Refresh Interval** | How often the VA flight data updates (in seconds) |
+
+**Recommended settings for a German VA:**
+```
+Center Coords:  51.1657,10.4515
+Default Zoom:   5
+Live Time:      0
+Refresh Interval: 60
+```
+> Zoom 5 shows all of Germany plus surrounding countries — perfect starting view for a German VA.
 
 ---
 
