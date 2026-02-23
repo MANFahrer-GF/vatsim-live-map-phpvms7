@@ -35,11 +35,20 @@ Copy it to the correct path depending on your theme:
 ## 🔑 OpenWeatherMap API Key (required for weather overlays)
 
 1. Register for free at [openweathermap.org](https://home.openweathermap.org/users/sign_up)
-2. Open `live_map.blade.php` and find:
+2. Open `live_map.blade.php` and go to **line 750** — you will find:
 ```javascript
 var OWM_API_KEY = "YOUR_OPENWEATHERMAP_API_KEY_HERE";
 ```
-3. Replace with your key.
+3. Replace `YOUR_OPENWEATHERMAP_API_KEY_HERE` with your key:
+```javascript
+var OWM_API_KEY = "abc123yourkeyhere";
+```
+
+**Quick way to find it:** Open the file in any text editor and use **Search / Find** (`Ctrl+F` on Windows, `Cmd+F` on Mac) and search for:
+```
+YOUR_OPENWEATHERMAP_API_KEY_HERE
+```
+It will jump directly to the correct line.
 
 > ⚠️ Without a valid key the weather buttons are hidden automatically — the map works fully without weather.
 
