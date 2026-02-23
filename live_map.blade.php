@@ -441,8 +441,210 @@
                     }
                 </style>
 
+                {{-- ══════════════════════════════════════════════════════════
+                     VA ACTIVE FLIGHTS PANEL (TOP-LEFT)
+                ══════════════════════════════════════════════════════════ --}}
+                <style>
+                    /* ── VA Flights Overlay Panel (Top-Left) ── */
+                    #va-flights-panel {
+                        position: absolute;
+                        top: 10px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        z-index: 1000;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                        min-width: 200px;
+                        max-width: 760px;
+                        width: max-content;
+                    }
+
+                    /* Toggle-Button (immer sichtbar) */
+                    #va-flights-toggle {
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 7px 11px;
+                        background: rgba(255,255,255,0.96);
+                        border: 1px solid rgba(0,0,0,0.12);
+                        border-radius: 8px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+                        cursor: pointer;
+                        font-size: 12px;
+                        font-weight: 700;
+                        color: #1a1a1a;
+                        white-space: nowrap;
+                        transition: background .15s;
+                        user-select: none;
+                    }
+                    #va-flights-toggle:hover { background: rgba(245,245,245,0.98); }
+                    #va-flights-toggle .va-toggle-icon {
+                        font-size: 13px; line-height: 1;
+                    }
+                    #va-flights-toggle .va-toggle-count {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        min-width: 18px;
+                        height: 18px;
+                        padding: 0 5px;
+                        background: #e74c3c;
+                        color: #fff;
+                        border-radius: 9px;
+                        font-size: 10px;
+                        font-weight: 800;
+                        line-height: 1;
+                    }
+                    #va-flights-toggle .va-toggle-count.empty {
+                        background: #bbb;
+                    }
+                    #va-flights-toggle .va-toggle-chevron {
+                        font-size: 10px;
+                        color: #888;
+                        transition: transform .2s;
+                    }
+                    #va-flights-toggle.open .va-toggle-chevron {
+                        transform: rotate(180deg);
+                    }
+
+                    /* Ausklappbare Tabelle */
+                    #va-flights-body {
+                        margin-top: 5px;
+                        background: rgba(255,255,255,0.97);
+                        border: 1px solid rgba(0,0,0,0.10);
+                        border-radius: 8px;
+                        box-shadow: 0 4px 16px rgba(0,0,0,0.16);
+                        overflow: hidden;
+                        max-height: 0;
+                        opacity: 0;
+                        pointer-events: none;
+                        transition: max-height .3s cubic-bezier(.4,0,.2,1),
+                                    opacity .2s ease;
+                        width: 750px;
+                    }
+                    #va-flights-body.open {
+                        max-height: 400px;
+                        opacity: 1;
+                        pointer-events: auto;
+                        overflow-y: auto;
+                    }
+
+                    /* Tabellen-Header */
+                    .va-table-head {
+                        display: grid;
+                        grid-template-columns: 74px 74px 94px 60px 54px 70px 80px 84px;
+                        padding: 6px 12px;
+                        background: #f0f4f8;
+                        border-bottom: 1px solid #e0e6ec;
+                        font-size: 9px;
+                        font-weight: 800;
+                        color: #667;
+                        letter-spacing: .6px;
+                        text-transform: uppercase;
+                        position: sticky;
+                        top: 0;
+                    }
+                    /* Tabellen-Zeile */
+                    .va-table-row {
+                        display: grid;
+                        grid-template-columns: 74px 74px 94px 60px 54px 70px 80px 84px;
+                        padding: 7px 12px;
+                        border-bottom: 1px solid #f0f0f0;
+                        font-size: 11px;
+                        color: #222;
+                        align-items: center;
+                        cursor: pointer;
+                        transition: background .12s;
+                    }
+                    .va-table-row:last-child { border-bottom: none; }
+                    .va-table-row:hover { background: #f5f9ff; }
+                    .va-table-row.active-flight { background: #edf7ed; }
+
+                    /* Zellen */
+                    .va-cell-callsign {
+                        font-weight: 800;
+                        color: #1a3a6b;
+                        letter-spacing: .5px;
+                    }
+                    .va-cell-route {
+                        color: #555;
+                        font-size: 10px;
+                    }
+                    .va-cell-route span { color: #888; }
+                    .va-cell-ac {
+                        font-size: 10px;
+                        color: #666;
+                    }
+                    .va-cell-alt { font-size: 11px; color: #333; }
+                    .va-cell-spd { font-size: 11px; color: #555; }
+                    .va-cell-status {
+                        font-size: 10px;
+                        font-weight: 700;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        text-align: center;
+                        white-space: nowrap;
+                    }
+                    .va-status-flying   { background: #e8f5e9; color: #2e7d32; }
+                    .va-status-boarding { background: #fff8e1; color: #f57f17; }
+                    .va-status-landed   { background: #fce4ec; color: #c62828; }
+                    .va-status-other    { background: #f3f4f6; color: #666; }
+
+                    /* Loading + Empty state */
+                    .va-table-info {
+                        padding: 16px 12px;
+                        text-align: center;
+                        font-size: 11px;
+                        color: #999;
+                    }
+
+                    /* Dark map mode: Panel leicht anpassen */
+                    .dark-map-panel #va-flights-toggle,
+                    .dark-map-panel #va-flights-body {
+                        background: rgba(28,34,44,0.95);
+                        border-color: rgba(255,255,255,0.1);
+                        color: #e0e0e0;
+                    }
+                    .dark-map-panel #va-flights-toggle { color: #e0e0e0; }
+                    .dark-map-panel .va-table-head {
+                        background: #1e2530;
+                        border-color: #2d3748;
+                        color: #8899aa;
+                    }
+                    .dark-map-panel .va-table-row {
+                        border-color: #2a3240;
+                        color: #ddd;
+                    }
+                    .dark-map-panel .va-table-row:hover { background: #232d3d; }
+                    .dark-map-panel .va-cell-callsign { color: #7eb8f7; }
+                </style>
+
                 <div class="live-map-wrapper">
                     <div id="map"></div>
+
+                    {{-- VA ACTIVE FLIGHTS PANEL (TOP-LEFT, collapsible) --}}
+                    <div id="va-flights-panel">
+                        <div id="va-flights-toggle" title="Toggle active VA flights">
+                            <span class="va-toggle-icon">✈</span>
+                            <span style="font-size:11px;font-weight:600;letter-spacing:.3px">Active Flights</span>
+                            <span id="va-flights-count" class="va-toggle-count empty">—</span>
+                            <span class="va-toggle-chevron">▼</span>
+                        </div>
+                        <div id="va-flights-body">
+                            <div class="va-table-head">
+                                <div>Flight</div>
+                                <div>Route</div>
+                                <div>Aircraft</div>
+                                <div>Altitude</div>
+                                <div>Speed</div>
+                                <div>Distance</div>
+                                <div>Status</div>
+                                <div>Pilot</div>
+                            </div>
+                            <div id="va-flights-rows">
+                                <div class="va-table-info">Loading…</div>
+                            </div>
+                        </div>
+                    </div>
 
                     {{-- FLIGHT INFO (TOP-RIGHT) --}}
                     <div id="map-info-box" class="map-info-card-big" rv-show="pirep.id">
@@ -463,7 +665,7 @@
                         {{-- Body: Flight details --}}
                         <div class="map-info-card-body">
                             <div class="map-info-row-big">
-                                <strong>{ pirep.airline.icao }{ pirep.flight_number }</strong>
+                                <strong class="map-info-callsign">{ pirep.airline.icao }{ pirep.flight_number }</strong>
                             </div>
                             <div class="map-info-row-big">
                                 { pirep.aircraft.registration } ({ pirep.aircraft.icao })
@@ -483,6 +685,35 @@
                                   rv-data-status="pirep.status_text"></span>
                         </div>
 
+                    </div>
+
+                    {{-- VA PANEL INFO CARD (TOP-RIGHT) — direkt per JS befüllt, kein Rivets --}}
+                    <div id="va-info-card" class="map-info-card-big" style="display:none">
+                        <div class="map-info-card-header" style="position:relative">
+                            <img id="va-info-logo" alt=""
+                                 style="max-width:130px;max-height:40px;height:auto;object-fit:contain;margin-bottom:4px;display:none"
+                                 onerror="this.style.display='none'"
+                                 onload="this.style.display='block'">
+                            <div id="va-info-route" class="map-info-route-big">— › —</div>
+                            {{-- Close Button --}}
+                            <button onclick="window.vaInfoCardClose()" style="
+                                position:absolute;top:8px;right:8px;
+                                background:none;border:none;cursor:pointer;
+                                font-size:16px;color:#aaa;line-height:1;padding:2px 4px"
+                                title="Close">✕</button>
+                        </div>
+                        <div class="map-info-card-body">
+                            <div class="map-info-row-big">
+                                <strong id="va-info-callsign" class="map-info-callsign"></strong>
+                            </div>
+                            <div id="va-info-aircraft" class="map-info-row-big"></div>
+                            <hr>
+                            <div id="va-info-alt" class="map-info-row-big"></div>
+                            <div id="va-info-spd" class="map-info-row-big"></div>
+                            <div id="va-info-pilot" class="map-info-row-big"></div>
+                            <hr>
+                            <span id="va-info-status" class="status-badge"></span>
+                        </div>
                     </div>
 
                     {{-- WEATHER BOX (BOTTOM-LEFT) --}}
@@ -536,22 +767,46 @@
                         </div>
                     </div>
 
-                    {{-- VATSIM BOX (BOTTOM-RIGHT) --}}
+                    {{-- NETWORK BOX (BOTTOM-RIGHT) --}}
                     <div class="map-vatsim-box">
-                        <div class="map-vatsim-title">
-                            <span class="vatsim-dot" id="vatsimDot"></span>
-                            VATSIM Live
+
+                        {{-- Netzwerk-Schalter --}}
+                        <div style="display:flex;gap:5px;margin-bottom:8px">
+                            <button id="btnNetVatsim" type="button"
+                                    style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
+                                           padding:4px 0;border-radius:5px;border:none;cursor:pointer;
+                                           font-size:10px;font-weight:700;letter-spacing:.4px;
+                                           background:#1abc9c;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25);
+                                           transition:opacity .2s"
+                                    title="VATSIM an/aus">
+                                <span id="vatsimNetDot" style="width:6px;height:6px;border-radius:50%;
+                                      background:#fff;display:inline-block;flex-shrink:0"></span>
+                                VATSIM
+                            </button>
+                            <button id="btnNetIvao" type="button"
+                                    style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
+                                           padding:4px 0;border-radius:5px;border:none;cursor:pointer;
+                                           font-size:10px;font-weight:700;letter-spacing:.4px;
+                                           background:#e67e22;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25);
+                                           opacity:.45;transition:opacity .2s"
+                                    title="IVAO an/aus">
+                                <span id="ivaoNetDot" style="width:6px;height:6px;border-radius:50%;
+                                      background:#fff;display:inline-block;flex-shrink:0"></span>
+                                IVAO
+                            </button>
                         </div>
+
+                        {{-- Layer-Toggle-Buttons (gelten für beide aktiven Netzwerke) --}}
                         <div class="map-vatsim-buttons">
-                            <button id="btnVatsimPilots" type="button" class="vatsim-btn" title="Show VATSIM pilots">
+                            <button id="btnVatsimPilots" type="button" class="vatsim-btn" title="Piloten anzeigen">
                                 <i class="fas fa-plane"></i>
                                 <span>Pilots</span>
                             </button>
-                            <button id="btnVatsimCtrl" type="button" class="vatsim-btn active" title="Show VATSIM controllers">
+                            <button id="btnVatsimCtrl" type="button" class="vatsim-btn active" title="Controller anzeigen">
                                 <i class="fas fa-headset"></i>
                                 <span>Controllers</span>
                             </button>
-                            <button id="btnVatsimSectors" type="button" class="vatsim-btn" title="Show FIR sector boundaries"
+                            <button id="btnVatsimSectors" type="button" class="vatsim-btn" title="FIR-Sektorgrenzen"
                                     style="flex:0 0 100%;max-width:100%">
                                 <i class="fas fa-draw-polygon"></i>
                                 <span>FIR Sectors</span>
@@ -562,7 +817,16 @@
                                 <span>Follow Flight</span>
                             </button>
                         </div>
-                        <div class="vatsim-stats" id="vatsimStats">Lade Daten…</div>
+
+                        {{-- Stats-Zeile --}}
+                        <div style="display:flex;gap:6px;margin-top:6px;font-size:10px;color:#555">
+                            <div id="vatsimStats" style="flex:1;min-width:0;text-align:center;padding:3px 4px;
+                                 background:#f0faf7;border-radius:3px;border:1px solid #d5ede8;
+                                 white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+                            <div id="ivaoStats"   style="flex:1;min-width:0;text-align:center;padding:3px 4px;
+                                 background:#fef5ec;border-radius:3px;border:1px solid #fde3c3;
+                                 white-space:nowrap;overflow:hidden;text-overflow:ellipsis">...</div>
+                        </div>
 
                         <!-- Badge-Legende -->
                         <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e0e0e0;
@@ -930,6 +1194,177 @@
             }
 
             // ════════════════════════════════════════════════════════════
+            // ══════════════════════════════════════════════════════════
+            //  VA AKTIVE FLÜGE PANEL (TOP-CENTER)
+            //  Quelle: phpVMS /api/acars – gleicher Refresh wie Karte
+            // ══════════════════════════════════════════════════════════
+            (function() {
+                var VA_API        = '/api/acars';
+                var VA_REFRESH_MS = ({{ setting('acars.update_interval', 60) }} * 1000) || 60000;
+                var panelOpen     = false;
+                var activeCallsign = null;
+                var panelToggle   = document.getElementById('va-flights-toggle');
+                var panelBody     = document.getElementById('va-flights-body');
+                var countBadge    = document.getElementById('va-flights-count');
+                var rowsEl        = document.getElementById('va-flights-rows');
+
+                if (!panelToggle) return;
+
+                // Toggle öffnen/schließen
+                panelToggle.addEventListener('click', function() {
+                    panelOpen = !panelOpen;
+                    panelToggle.classList.toggle('open', panelOpen);
+                    panelBody.classList.toggle('open', panelOpen);
+                });
+
+                // phpVMS delivers status_text in the server's locale (may be German).
+                // Translate known German strings to English before display.
+                var STATUS_DE_EN = {
+                    'unterwegs':        'En Route',
+                    'im flug':          'En Route',
+                    'in der luft':      'En Route',
+                    'geplant':          'Planned',
+                    'boarding':         'Boarding',
+                    'rollt':            'Taxiing',
+                    'rollen':           'Taxiing',
+                    'starten':          'Taking Off',
+                    'steigen':          'Climbing',
+                    'reiseflug':        'Cruise',
+                    'sinken':           'Descending',
+                    'anflug':           'Approach',
+                    'landung':          'Landing',
+                    'gelandet':         'Landed',
+                    'abgeschlossen':    'Completed',
+                    'abgebrochen':      'Cancelled',
+                    'pausiert':         'Paused',
+                };
+                function translateStatus(s) {
+                    if (!s) return s;
+                    var lower = s.toLowerCase().trim();
+                    return STATUS_DE_EN[lower] || s;
+                }
+                window.translateStatus = translateStatus;
+
+                // Status → CSS class
+                function statusClass(s) {
+                    if (!s) return 'va-status-other';
+                    var sl = s.toLowerCase();
+                    if (sl.includes('unterwegs') || sl.includes('en route') || sl.includes('progress') || sl.includes('cruise') || sl.includes('enroute')) return 'va-status-flying';
+                    if (sl.includes('boarding') || sl.includes('taxi') || sl.includes('depart') || sl.includes('climb') || sl.includes('rollt') || sl.includes('starten') || sl.includes('steigen')) return 'va-status-boarding';
+                    if (sl.includes('landed') || sl.includes('gelandet') || sl.includes('arrival') || sl.includes('approach') || sl.includes('landing') || sl.includes('sinken') || sl.includes('anflug')) return 'va-status-landed';
+                    return 'va-status-other';
+                }
+
+                function renderFlights(flights) {
+                    if (!rowsEl) return;
+                    if (!flights || flights.length === 0) {
+                        rowsEl.innerHTML = '<div class="va-table-info">No active flights</div>';
+                        return;
+                    }
+
+                    // Altes HTML löschen
+                    rowsEl.innerHTML = '';
+
+                    flights.forEach(function(f) {
+                        var callsign = (f.airline && f.airline.icao ? f.airline.icao : '') +
+                                       (f.flight_number || f.callsign || '');
+                        var dep  = (f.dpt_airport && (f.dpt_airport.icao || f.dpt_airport.id)) || '—';
+                        var arr  = (f.arr_airport  && (f.arr_airport.icao  || f.arr_airport.id))  || '—';
+                        var reg  = (f.aircraft && f.aircraft.registration) || '';
+                        var ac   = (f.aircraft && f.aircraft.icao)         || '';
+                        var acStr = reg ? reg + (ac ? ' (' + ac + ')' : '') : (ac || '—');
+                        var alt  = (f.position && f.position.altitude) ? parseInt(f.position.altitude).toLocaleString() + ' ft' : '—';
+                        var spd  = (f.position && f.position.gs)       ? f.position.gs + ' kt' : '—';
+                        var stat = translateStatus(f.status_text || f.status || '—');
+
+                        // Distanz: geflogen / geplant in nmi
+                        var distFlown   = (f.position && f.position.distance && f.position.distance.nmi != null)
+                                            ? Math.round(parseFloat(f.position.distance.nmi)) : null;
+                        var distPlanned = (f.planned_distance && f.planned_distance.nmi != null)
+                                            ? Math.round(parseFloat(f.planned_distance.nmi)) : null;
+                        var dist = distFlown !== null && distPlanned !== null
+                                    ? distFlown + ' / ' + distPlanned + ' nmi'
+                                    : distFlown !== null ? distFlown + ' nmi'
+                                    : distPlanned !== null ? '— / ' + distPlanned + ' nmi'
+                                    : '—';
+                        var sCls = statusClass(stat);
+                        var lat  = f.position && f.position.lat  ? parseFloat(f.position.lat)  : null;
+                        var lng  = f.position && f.position.lon  ? parseFloat(f.position.lon)
+                                 : f.position && f.position.lng  ? parseFloat(f.position.lng)  : null;
+
+                        // Pilotenname: first_name oder name oder pilot_name
+                        var pilot = '—';
+                        if (f.user) {
+                            pilot = f.user.name
+                                 || (f.user.first_name ? f.user.first_name + (f.user.last_name ? ' ' + f.user.last_name.charAt(0) + '.' : '') : '')
+                                 || '—';
+                        } else if (f.pilot) {
+                            pilot = f.pilot.name || f.pilot.first_name || '—';
+                        }
+
+                        var row = document.createElement('div');
+                        row.className = 'va-table-row' + (callsign === activeCallsign ? ' active-flight' : '');
+                        row.setAttribute('data-callsign', callsign);
+                        row.innerHTML =
+                            '<div class="va-cell-callsign">' + (callsign || '—') + '</div>' +
+                            '<div class="va-cell-route">' + dep + ' <span>›</span> ' + arr + '</div>' +
+                            '<div class="va-cell-ac">' + acStr + '</div>' +
+                            '<div class="va-cell-alt">' + alt + '</div>' +
+                            '<div class="va-cell-spd">' + spd + '</div>' +
+                            '<div style="font-size:10px;color:#555;white-space:nowrap">' + dist + '</div>' +
+                            '<div><span class="va-cell-status ' + sCls + '">' + stat + '</span></div>' +
+                            '<div style="font-size:11px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + pilot + '">' + pilot + '</div>';
+
+                        // Row-Klick → VA Info-Card direkt befüllen
+                        row.addEventListener('click', function() {
+                            var prev = rowsEl.querySelector('.active-flight');
+                            if (prev) prev.classList.remove('active-flight');
+                            row.classList.add('active-flight');
+                            activeCallsign = callsign;
+
+                            if (typeof window.vaInfoCardOpen === 'function') {
+                                window.vaInfoCardOpen(f, lat, lng);
+                            }
+                        });
+
+                        rowsEl.appendChild(row);
+                    });
+                }
+
+                function loadVaFlights() {
+                    fetch(VA_API)
+                        .then(function(r) { return r.json(); })
+                        .then(function(resp) {
+                            var flights = Array.isArray(resp) ? resp
+                                        : (resp.data && Array.isArray(resp.data)) ? resp.data
+                                        : [];
+                            if (countBadge) {
+                                countBadge.textContent = flights.length;
+                                countBadge.classList.toggle('empty', flights.length === 0);
+                            }
+                            renderFlights(flights);
+                        })
+                        .catch(function() {
+                            if (countBadge) { countBadge.textContent = '!'; countBadge.classList.add('empty'); }
+                            if (rowsEl) rowsEl.innerHTML = '<div class="va-table-info">⚠ Unavailable</div>';
+                        });
+                }
+
+                loadVaFlights();
+                setInterval(loadVaFlights, VA_REFRESH_MS);
+
+                // Dark-Map-Toggle: Panel ebenfalls abdunkeln
+                var wrapper = document.querySelector('.live-map-wrapper');
+                var mapEl   = document.getElementById('map');
+                if (mapEl && wrapper) {
+                    var observer = new MutationObserver(function() {
+                        var isDark = mapEl.classList.contains('dark-map');
+                        wrapper.classList.toggle('dark-map-panel', isDark);
+                    });
+                    observer.observe(mapEl, { attributes: true, attributeFilter: ['class'] });
+                }
+            })();
+
             //  VATSIM LIVE INTEGRATION  (VOR render_live_map!)
             //  Standard AUS – manuell einschalten
             //  Controller-Positionen via Transceivers-API (wie vatSpy)
@@ -940,7 +1375,18 @@
             var VATSIM_TRX_API    = 'https://data.vatsim.net/v3/transceivers-data.json';
             var VATSPY_BOUNDS_API = 'https://raw.githubusercontent.com/vatsimnetwork/vatspy-data-project/master/Boundaries.geojson';
             var VATSPY_DAT_API    = 'https://raw.githubusercontent.com/vatsimnetwork/vatspy-data-project/master/VATSpy.dat';
+            var IVAO_DATA_API     = 'https://api.ivao.aero/v2/tracker/whazzup';
             var VATSIM_REFRESH_MS = 30000;
+            var IVAO_REFRESH_MS   = 15000;
+
+            // Bekannte Upper-Airspace-UIR-Designatoren (global, genutzt von VATSIM + IVAO)
+            var UPPER_FIR = {
+                'EDUU':1, 'EDYY':1,   // Deutschland Upper
+                'ESAA':1,              // Schweden Upper
+                'EISN':1,              // Irland Upper
+                'BIRD':1,              // Shanwick/Reykjavik Oceanic
+                'GMMM':1,              // Casablanca UIR
+            };
 
             // Statischer Airport-Positions-Cache aus VATSpy.dat (ICAO → [lat, lon])
             // Deckt alle ~7000 Airports ab — korrekte Positionen unabhängig von VATSIM-Daten
@@ -952,17 +1398,27 @@
             var firNameCache = {};
             var firNameLoaded = false;
 
-            // Anzeigestatus der drei VATSIM-Layer
-            // Standard: nur Controller aktiv, Piloten und Sektoren deaktiviert
+            // ── Netzwerk-Status ──
+            var showVatsim = true;
+            var showIvao   = false;  // IVAO initial aus
+
+            // Anzeigestatus der Layer-Typen (gilt für beide Netzwerke)
             var vatsimShowPilots  = false;
             var vatsimShowCtrl    = true;
             var vatsimShowSectors = false;
 
+            // VATSIM Layer
             var vatsimPilotsLayer = L.layerGroup();
             var vatsimCtrlLayer   = L.layerGroup();
-            var vatsimSectorLayer = L.layerGroup(); // FIR/CTR-Sektorgrenzen
-            var routeLineLayer    = L.layerGroup(); // Gestrichelte Route-Linie zum Zielflughafen
-            var lastDrawnArr      = null;           // Zuletzt gezeichneter Ziel-ICAO (für Reset)
+            var vatsimSectorLayer = L.layerGroup();
+
+            // IVAO Layer
+            var ivaoPilotsLayer   = L.layerGroup();
+            var ivaoCtrlLayer     = L.layerGroup();
+            var ivaoSectorLayer   = L.layerGroup();
+
+            var routeLineLayer    = L.layerGroup();
+            var lastDrawnArr      = null;
 
             // Zeichnet gestrichelte Linie vom Flugzeug zum Ziel-Airport
             // Wird bei Klick auf Flugzeug gezeigt, bei Klick auf die Karte wieder entfernt
@@ -1059,6 +1515,25 @@
                     '<ellipse cx="16" cy="16" rx="2.5" ry="10" fill="#1a6fc4"/>' +
                     '<polygon points="16,14 3,20 3,22 16,18 29,22 29,20" fill="#1a6fc4"/>' +
                     '<polygon points="16,24 10,29 10,30 16,27 22,30 22,29" fill="#1a6fc4"/>' +
+                    '<ellipse cx="16" cy="10" rx="1.5" ry="3" fill="rgba(255,255,255,0.35)"/>' +
+                    '</g></svg>';
+                return L.divIcon({
+                    html: '<img src="data:image/svg+xml;base64,' + btoa(svg) + '" width="22" height="22" style="display:block">',
+                    className: '',
+                    iconSize:   [22, 22],
+                    iconAnchor: [11, 11],
+                });
+            }
+
+            // IVAO-Flugzeug-Icon: orange (erkennbar anders als VATSIM blau)
+            function buildIvaoAircraftIcon(heading) {
+                var h = (heading != null ? heading : 0);
+                var svg =
+                    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="22" height="22">' +
+                    '<g transform="rotate(' + h + ',16,16)">' +
+                    '<ellipse cx="16" cy="16" rx="2.5" ry="10" fill="#e67e22"/>' +
+                    '<polygon points="16,14 3,20 3,22 16,18 29,22 29,20" fill="#e67e22"/>' +
+                    '<polygon points="16,24 10,29 10,30 16,27 22,30 22,29" fill="#e67e22"/>' +
                     '<ellipse cx="16" cy="10" rx="1.5" ry="3" fill="rgba(255,255,255,0.35)"/>' +
                     '</g></svg>';
                 return L.divIcon({
@@ -1414,48 +1889,96 @@
             }
 
             // ── FIR-Sektorgrenzen rendern ──
-            function renderActiveSectors(activeFirMap) {
-                vatsimSectorLayer.clearLayers();
+            // sectorTarget: optional — Standard ist vatsimSectorLayer (für IVAO: ivaoSectorLayer)
+            function renderActiveSectors(activeFirMap, sectorTarget) {
+                var sectorLayer = sectorTarget || vatsimSectorLayer;
+                sectorLayer.clearLayers();
                 if (!firBoundsGeoJson || !firBoundsGeoJson.features) return;
 
-                // Features pro CTR sammeln
-                // Matching-Strategie mit firPrefixMap:
-                //   ctrId="ZNY" → firPrefixMap["ZNY"]="KZNY" → GeoJSON feature.properties.id="KZNY" ✓
-                //   ctrId="EDWW" → firPrefixMap["EDWW"]="EDWW" → GeoJSON id="EDWW" ✓
-                var ctrlFeatureMap = {};
+                // ── Matching-Strategie ──
+                //
+                // VATSpy GeoJSON nutzt Bindestriche als Separator: "EDMM-ZUG"
+                // VATSIM-Callsigns nutzen Unterstriche: "EDMM_ZUG_CTR" → mapKey "EDMM_ZUG"
+                //
+                // Normalisierung: firId wird mit Bindestrich→Unterstrich verglichen.
+                //
+                // Für jeden mapKey:
+                //   1. Sub-Sektor-Key (EDMM_ZUG): suche Polygon "EDMM-ZUG" / "EDMM_ZUG" → exakt
+                //   2. Sub-Sektor-Key (EDWW_B):   kein Polygon "EDWW-B" in VATSpy
+                //      → Fallback: zeige Root-Polygon "EDWW" (einziges verfügbares)
+                //   3. Root-Key (EDWW):            zeige Polygon "EDWW" direkt
+                //
+                // Jedes GeoJSON-Feature wird maximal einem mapKey zugeordnet.
+                // Sub-Sektor-Keys haben Vorrang vor Root-Keys für dasselbe Feature.
+
+                // Schritt 1: Alle verfügbaren GeoJSON-Feature-IDs indexieren (normalisiert)
+                var featureById = {}; // normalisierter_id → feature
                 firBoundsGeoJson.features.forEach(function(feature) {
                     var props = feature.properties || {};
-                    // GeoJSON Feature id kann top-level ODER in properties sein
-                    var firId = (feature.id || props.id || props.oceanic_prefix || '').toString().toUpperCase();
-                    if (!firId) return;
-
-                    var matchKey = null;
-                    Object.keys(activeFirMap).forEach(function(ctrId) {
-                        if (matchKey) return;
-                        // Via firPrefixMap: ZNY → KZNY → match mit "KZNY"
-                        var resolvedId = firPrefixMap[ctrId] || ctrId;
-                        if (resolvedId === firId) { matchKey = ctrId; return; }
-                        // Direkte Varianten
-                        if (ctrId === firId) { matchKey = ctrId; return; }
-                        if ('K' + ctrId === firId) { matchKey = ctrId; return; }
-                        if (ctrId === 'K' + firId) { matchKey = ctrId; return; }
-                        // Sub-Sektor: firId beginnt mit resolvedId (z.B. EDGG_S beginnt mit EDGG)
-                        if (firId.indexOf(resolvedId) === 0 && resolvedId.length >= 3) {
-                            matchKey = ctrId;
-                        }
-                    });
-                    if (!matchKey) return;
-                    if (!ctrlFeatureMap[matchKey]) ctrlFeatureMap[matchKey] = [];
-                    ctrlFeatureMap[matchKey].push(feature);
+                    var rawId = (feature.id || props.id || props.oceanic_prefix || '').toString().toUpperCase();
+                    if (!rawId) return;
+                    // Normalisiert: Bindestrich → Unterstrich (EDMM-ZUG → EDMM_ZUG)
+                    var normId = rawId.replace(/-/g, '_');
+                    featureById[normId] = feature;
+                    featureById[rawId]  = feature; // auch Original behalten
                 });
 
+                // Schritt 2: Feature-IDs die von einem Sub-Sektor-Key direkt beansprucht werden
+                var claimedFeatures = {}; // normId → true
+
+                // Schritt 3: Für jeden mapKey die passenden Features bestimmen
+                var ctrlFeatureMap = {};
+
+                Object.keys(activeFirMap).forEach(function(mapKey) {
+                    var info     = activeFirMap[mapKey];
+                    var root     = info.root || mapKey.split('_')[0];
+                    var isSubKey = mapKey.indexOf('_') !== -1; // z.B. "EDMM_ZUG" oder "EDWW_B"
+
+                    // firPrefixMap für US-FIRs (ZNY → KZNY)
+                    var resolvedRoot = firPrefixMap[root] || root;
+
+                    var features = [];
+
+                    if (isSubKey) {
+                        // Versuch 1: Exakter Sub-Sektor-Match (EDMM_ZUG → "EDMM-ZUG" oder "EDMM_ZUG")
+                        var f = featureById[mapKey] || featureById[mapKey.replace(/_/g, '-')];
+                        if (f) {
+                            features = [f];
+                            claimedFeatures[mapKey] = true;
+                            claimedFeatures[mapKey.replace(/_/g, '-')] = true;
+                        } else {
+                            // Versuch 2: Fallback auf Root-Polygon (EDWW_B → suche "EDWW")
+                            var rootF = featureById[resolvedRoot] || featureById['K' + resolvedRoot];
+                            if (rootF) features = [rootF];
+                            // Root-Polygon nicht als claimed markieren (wird nur als Fallback genutzt)
+                        }
+                    } else {
+                        // Root-Key: alle Features die mit diesem Root beginnen
+                        // (exakt oder als Sub-Polygon, aber nur wenn noch nicht von Sub-Key beansprucht)
+                        Object.keys(featureById).forEach(function(normId) {
+                            // Bereits von einem Sub-Sektor-Key beansprucht → überspringen
+                            if (claimedFeatures[normId]) return;
+                            var f2 = featureById[normId];
+                            // Exakter Match oder K-Prefix-Variante
+                            if (normId === resolvedRoot || normId === root ||
+                                normId === 'K' + root || root === 'K' + normId) {
+                                if (features.indexOf(f2) === -1) features.push(f2);
+                            }
+                        });
+                    }
+
+                    if (features.length > 0) {
+                        ctrlFeatureMap[mapKey] = features;
+                    }
+                });
+
+                // Schritt 4: Alle gematchten Gruppen rendern
                 Object.keys(ctrlFeatureMap).forEach(function(matchKey) {
                     var features = ctrlFeatureMap[matchKey];
                     var info     = activeFirMap[matchKey];
                     var color    = info.color || '#1abc9c';
-                    var short    = info.callsign.split('_')[0];
+                    var short    = info.root || info.callsign.split('_')[0];
 
-                    // Echter FIR-Name aus VATSpy.dat, sonst Callsign
                     var firName  = firNameCache[short] || info.callsign;
 
                     // Sub-Sektor-Liste für Popup bauen
@@ -1484,6 +2007,7 @@
                         '<div class="vatsim-popup-header">' +
                             '<div class="vatsim-popup-callsign">' + info.callsign + '</div>' +
                             '<div class="vatsim-popup-route">' + firName + '</div>' +
+                            (isUpper ? '<div style="font-size:10px;color:#8e44ad;font-weight:700;margin-top:2px">▲ Upper Airspace</div>' : '') +
                         '</div>' +
                         '<div class="vatsim-popup-body">' +
                             vRow('Frequency', info.frequency || '—') +
@@ -1492,25 +2016,33 @@
                         '</div></div>';
 
                     // Alle Flächen zeichnen — jeder Teilsektor klickbar
+                    // Upper-Airspace-Sektoren: nur Umriss (kein Fill) damit Lower-Sektoren
+                    // darunter sichtbar bleiben
+                    var isUpper      = !!info.isUpper;
+                    var fillOpacity  = isUpper ? 0    : 0.08;
+                    var hoverFill    = isUpper ? 0.06 : 0.22;
+                    var borderWeight = isUpper ? 2    : 1.5;
+                    var dashArray    = isUpper ? '10 6' : '5 4';
+
                     features.forEach(function(feature) {
                         var subId = ((feature.properties || {}).id || '').toUpperCase();
                         var subCenter = polyCenter(feature);
                         try {
                             var layer = L.geoJSON(feature, {
                                 style: {
-                                    color: color, weight: 1.5, opacity: 0.65,
-                                    fillColor: color, fillOpacity: 0.08, dashArray: '5 4',
+                                    color: color, weight: borderWeight, opacity: 0.75,
+                                    fillColor: color, fillOpacity: fillOpacity, dashArray: dashArray,
                                 },
                             });
                             // Hover: Sub-Sektor hervorheben
                             layer.on('mouseover', function(e) {
-                                e.target.setStyle({ fillOpacity: 0.22, weight: 2, dashArray: '' });
+                                e.target.setStyle({ fillOpacity: hoverFill, weight: borderWeight + 0.5, dashArray: '' });
                             });
                             layer.on('mouseout', function(e) {
-                                e.target.setStyle({ fillOpacity: 0.08, weight: 1.5, dashArray: '5 4' });
+                                e.target.setStyle({ fillOpacity: fillOpacity, weight: borderWeight, dashArray: dashArray });
                             });
                             layer.bindPopup(popupContent, { maxWidth: 260 });
-                            layer.addTo(vatsimSectorLayer);
+                            layer.addTo(sectorLayer);
                         } catch(e) {}
 
                         // Kleines Sub-Sektor-Label im Zentroid (nur wenn mehrere Teilsektoren)
@@ -1524,7 +2056,7 @@
                                     className: '', iconSize: [40, 14], iconAnchor: [20, 7],
                                 }),
                                 interactive: false, zIndexOffset: 100,
-                            }).addTo(vatsimSectorLayer);
+                            }).addTo(sectorLayer);
                         }
                     });
 
@@ -1553,7 +2085,7 @@
                         zIndexOffset: 200, title: info.callsign,
                     })
                     .bindPopup(popupContent, { maxWidth: 260 })
-                    .addTo(vatsimSectorLayer);
+                    .addTo(sectorLayer);
                 });
             }
 
@@ -1563,9 +2095,9 @@
             // Bei Zoom >= 5: volle Anzeige (Badges + ICAO-Label)
             function updateCtrlZoom(map) {
                 var z = map.getZoom();
-                var markers = document.querySelectorAll('.vatsim-airport-marker');
+                var markers = document.querySelectorAll('.vatsim-airport-marker, .ivao-airport-marker');
                 markers.forEach(function(el) {
-                    var label = el.querySelector('div:first-child'); // ICAO-Label
+                    var label = el.querySelector('div:first-child');
                     if (z < 3) {
                         el.parentElement.style.display = 'none';
                     } else {
@@ -1573,6 +2105,113 @@
                         if (label) label.style.display = z >= 5 ? '' : 'none';
                     }
                 });
+            }
+
+            // IVAO Airport-Icon (wie VATSIM, aber orange Rahmen + "IV" Kennung)
+            function buildAirportCtrlIconIvao(icao, ctrlList, atisList) {
+                var TYPES = {
+                    2: { short:'D', color:'#2980b9' },
+                    3: { short:'G', color:'#d35400' },
+                    4: { short:'T', color:'#c0392b' },
+                    5: { short:'A', color:'#27ae60' },
+                };
+                var order = [2, 3, 4, 5];
+                var counts = {};
+                ctrlList.forEach(function(c) {
+                    if (TYPES[c.facility]) counts[c.facility] = (counts[c.facility]||0) + 1;
+                });
+                var ac      = atisList ? atisList.length : 0;
+                var hasApp  = !!(counts[5]);
+                var appCount = counts[5] || 0;
+
+                var dots = order.filter(function(f) { return f !== 5 && counts[f]; }).map(function(f) {
+                    var t = TYPES[f], n = counts[f];
+                    return '<span style="position:relative;display:inline-flex;align-items:center;' +
+                        'justify-content:center;width:14px;height:14px;border-radius:3px;' +
+                        'background:' + t.color + ';color:#fff;font-size:8px;font-weight:800;' +
+                        'box-shadow:0 1px 2px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.5)">' +
+                        t.short +
+                        (n > 1 ? '<span style="position:absolute;top:-4px;right:-4px;background:#c0392b;' +
+                            'color:#fff;border-radius:50%;width:9px;height:9px;font-size:6px;' +
+                            'display:flex;align-items:center;justify-content:center;' +
+                            'border:1px solid #fff;line-height:1;font-weight:900">' + n + '</span>' : '') +
+                        '</span>';
+                }).join('');
+
+                if (hasApp || ac > 0) {
+                    var hasAtis = ac > 0;
+                    var badgeText, badgeBg, badgeW2 = 18, badgeH2 = 18, badgeRadius = '4px';
+                    if (hasApp && hasAtis) {
+                        badgeText = 'A<span style="font-style:italic;font-size:9px;opacity:0.9">i</span>';
+                        badgeBg = '#27ae60'; badgeW2 = 22;
+                    } else if (hasApp) {
+                        badgeText = 'A'; badgeBg = '#27ae60';
+                    } else {
+                        badgeText = '<span style="font-style:italic">i</span>';
+                        badgeBg = '#5dade2'; badgeRadius = '50%';
+                    }
+                    dots += '<span style="position:relative;display:inline-flex;align-items:center;' +
+                        'justify-content:center;width:' + badgeW2 + 'px;height:' + badgeH2 + 'px;' +
+                        'border-radius:' + badgeRadius + ';background:' + badgeBg + ';color:#fff;' +
+                        'font-size:9px;font-weight:900;box-shadow:0 1px 4px rgba(0,0,0,0.5);' +
+                        'border:1.5px solid rgba(255,255,255,0.6)">' + badgeText + '</span>';
+                }
+
+                var badgeW = (Object.keys(counts).length + 1) * 18;
+                var labelW = icao.length * 7 + 8;
+                var w      = Math.max(badgeW, labelW, 30) + 16;
+                var h      = 36;
+
+                return L.divIcon({
+                    html: '<div style="width:' + w + 'px;height:' + h + 'px;display:flex;flex-direction:column;' +
+                        'align-items:center;justify-content:center;gap:2px;cursor:pointer;' +
+                        'outline:2px solid #e67e22;border-radius:3px;outline-offset:1px">' +
+                        '<span style="font-size:9px;font-weight:700;color:#1a1a1a;' +
+                        'text-shadow:0 0 3px #fff,0 0 3px #fff;letter-spacing:.3px;line-height:1">' +
+                        icao + '</span>' +
+                        '<div style="display:flex;gap:2px;align-items:center">' + dots + '</div>' +
+                        '</div>',
+                    className: 'ivao-airport-marker',
+                    iconSize:   [w, h],
+                    iconAnchor: [w / 2, h / 2],
+                });
+            }
+
+            // IVAO Airport-Popup
+            function buildAirportCtrlPopupIvao(icao, ctrlList, atisList) {
+                var order = {2:1, 3:2, 4:3, 5:4};
+                ctrlList = ctrlList.slice().sort(function(a,b){ return (order[a.facility]||9) - (order[b.facility]||9); });
+                var BADGE = { 2:{label:'DEL',color:'#2980b9'}, 3:{label:'GND',color:'#d35400'}, 4:{label:'TWR',color:'#c0392b'}, 5:{label:'APP',color:'#27ae60'} };
+                var ctrlRows = ctrlList.map(function(c) {
+                    var t = BADGE[c.facility] || {label:'ATC', color:'#7f8c8d'};
+                    return '<div style="padding:7px 0;border-bottom:1px solid #f0f0f0">' +
+                        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">' +
+                            '<span style="background:' + t.color + ';color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700">' + t.label + '</span>' +
+                            '<span style="font-size:13px;font-weight:700;color:#1a1a1a">' + c.callsign + '</span>' +
+                            '<span style="font-size:12px;color:#888;margin-left:auto">' + (c.frequency||'') + '</span>' +
+                        '</div>' +
+                        ctrlInfoLine(c) + '</div>';
+                }).join('');
+                var atisRows = '';
+                if (atisList && atisList.length) {
+                    atisRows = atisList.map(function(a) {
+                        var fullText = Array.isArray(a.text_atis) ? a.text_atis.join(' ') : '';
+                        return '<div style="padding:6px 0;border-bottom:1px solid #f0f0f0">' +
+                            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+                                '<span style="background:#5dade2;color:#fff;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700">ATIS</span>' +
+                                '<span style="font-size:12px;font-weight:700">' + a.callsign + '</span>' +
+                                '<span style="font-size:12px;color:#888;margin-left:auto">' + (a.frequency||'—') + '</span>' +
+                            '</div>' +
+                            (fullText ? '<div style="font-size:10px;color:#555;line-height:1.5;background:#f8faff;padding:5px 8px;border-radius:4px">' + fullText + '</div>' : '') +
+                        '</div>';
+                    }).join('');
+                }
+                return '<div class="vatsim-popup">' +
+                    '<div class="vatsim-popup-header">' +
+                        '<div class="vatsim-popup-callsign">' + icao + '</div>' +
+                        '<div style="font-size:9px;font-weight:700;color:#e67e22">IVAO</div>' +
+                    '</div>' +
+                    '<div class="vatsim-popup-body">' + ctrlRows + atisRows + '</div></div>';
             }
             function loadTransceivers() {
                 return fetch(VATSIM_TRX_API)
@@ -1780,18 +2419,23 @@
                     });
 
                     // ── CTR/FSS/TRACON: FIR-Karte mit vollständigen Infos aufbauen ──
+                    //
+                    // (UPPER_FIR ist global definiert)
+
                     var activeFirMap = {};
                     centerList.forEach(function(entry, idx) {
-                        if (traconMerged[idx]) return; // bereits in Airport-Marker eingemergt
+                        if (traconMerged[idx]) return;
                         var c        = entry.ctrl;
-                        var short    = c.callsign.split('_')[0].toUpperCase();
-                        // Farb-Schema: CTR=türkis, FSS=lila, TRACON=orange
+                        var parts    = c.callsign.split('_');
+                        var root     = parts[0].toUpperCase(); // immer EDWW / EDGG / EDMM etc.
+
+                        var isUpper  = !!UPPER_FIR[root];
                         var color    = entry.isTracon ? '#27ae60'
+                                     : isUpper        ? '#8e44ad'
                                      : c.facility === 6 ? '#1abc9c'
                                      : '#8e44ad';
                         ctrlDone++;
-                        // Beim TRACON-Matching: kein FIR-Sektor erwartet → kein activeFirMap-Eintrag
-                        // Stattdessen: direkt als Marker auf den vatsimCtrlLayer
+
                         if (entry.isTracon) {
                             var traconIcon = L.divIcon({
                                 html: '<div style="display:flex;flex-direction:column;align-items:center;' +
@@ -1800,13 +2444,13 @@
                                       'padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;' +
                                       'letter-spacing:.5px;box-shadow:0 1px 4px rgba(0,0,0,0.4);' +
                                       'border:1px solid rgba(255,255,255,0.5);line-height:1.4">' +
-                                      short + '</div>' +
+                                      root + '</div>' +
                                       '<div style="width:4px;height:4px;border-radius:50%;' +
                                       'background:' + color + ';margin-top:2px"></div>' +
                                       '</div>',
                                 className: '',
-                                iconSize:   [short.length * 8 + 16, 26],
-                                iconAnchor: [(short.length * 8 + 16) / 2, 13],
+                                iconSize:   [root.length * 8 + 16, 26],
+                                iconAnchor: [(root.length * 8 + 16) / 2, 13],
                             });
                             var traconPopup =
                                 '<div class="vatsim-popup">' +
@@ -1823,17 +2467,38 @@
                             })
                             .bindPopup(traconPopup, { maxWidth: 260 })
                             .addTo(vatsimCtrlLayer);
+
                         } else {
-                            activeFirMap[short] = {
-                                callsign:     c.callsign,
-                                frequency:    c.frequency,
-                                name:         c.name,
-                                cid:          c.cid,
-                                rating:       c.rating,
-                                logon_time:   c.logon_time,
-                                visual_range: c.visual_range,
-                                color:        color,
-                            };
+                            // ── Key-Strategie ──
+                            // VATSpy hat für DE nur Root-Polygone (EDWW, EDGG, EDMM)
+                            // plus wenige echte Sub-Sektor-Polygone (z.B. EDMM-ZUG → normalisiert EDMM_ZUG).
+                            //
+                            // EDWW_CTR    → Key "EDWW"      (Root)
+                            // EDWW_B_CTR  → Key "EDWW_B"    (Sub-Sektor)
+                            // EDMM_ZUG_CTR→ Key "EDMM_ZUG"  (hat eigenes VATSpy-Polygon!)
+                            //
+                            // In renderActiveSectors wird für Sub-Sektor-Keys zuerst nach einem
+                            // spezifischen Polygon gesucht; fehlt dieses, Fallback auf Root-Polygon.
+                            // So zeigt EDWW_B_CTR das volle EDWW-Polygon (das einzige was VATSpy hat).
+
+                            var mapKey = parts.length >= 3
+                                ? root + '_' + parts[1].toUpperCase()  // EDWW_B
+                                : root;                                  // EDWW
+
+                            if (!activeFirMap[mapKey]) {
+                                activeFirMap[mapKey] = {
+                                    callsign:     c.callsign,
+                                    frequency:    c.frequency,
+                                    name:         c.name,
+                                    cid:          c.cid,
+                                    rating:       c.rating,
+                                    logon_time:   c.logon_time,
+                                    visual_range: c.visual_range,
+                                    color:        color,
+                                    isUpper:      isUpper,
+                                    root:         root,
+                                };
+                            }
                         }
                     });
 
@@ -1851,15 +2516,13 @@
                         .then(renderSectors)
                         .catch(function(e){ console.warn('[VATSIM] Sektoren-Fehler:', e); });
 
-                    // Layer nur anzeigen wenn Toggle aktiv
-                    if (vatsimShowPilots && !map.hasLayer(vatsimPilotsLayer)) vatsimPilotsLayer.addTo(map);
-                    if (vatsimShowCtrl   && !map.hasLayer(vatsimCtrlLayer))   vatsimCtrlLayer.addTo(map);
-                    if (vatsimShowSectors && !map.hasLayer(vatsimSectorLayer)) vatsimSectorLayer.addTo(map);
+                    // Layer-Sichtbarkeit aktualisieren (guard: erst aktiv nach Init-Hook)
+                    if (typeof applyLayerVisibility === 'function') applyLayerVisibility();
 
-                    // Stats (kein "klick zum aktivieren" mehr)
+                    // Stats
                     var statsEl = document.getElementById('vatsimStats');
-                    var dotEl   = document.getElementById('vatsimDot');
-                    if (statsEl) statsEl.textContent = '✈ ' + pilots.length + '  •  🎧 ' + ctrlDone;
+                    var dotEl   = document.getElementById('vatsimNetDot');
+                    if (statsEl) statsEl.textContent = '\u2708' + pilots.length + '  \uD83C\uDFA7' + ctrlDone;
                     if (dotEl)   dotEl.classList.add('live');
 
                     console.log('[VATSIM] ' + pilots.length + ' Piloten, ' + ctrlDone + ' Controller positioniert');
@@ -1867,7 +2530,185 @@
                 .catch(function(err) {
                     console.error('[VATSIM] Fehler:', err);
                     var statsEl = document.getElementById('vatsimStats');
-                    if (statsEl) statsEl.textContent = '⚠ Nicht erreichbar';
+                    if (statsEl) statsEl.textContent = '⚠ Error';
+                });
+            }
+
+            // ──────────────────────────────────────────────────────────────────────
+            // IVAO: Daten laden und auf Karte rendern
+            // API: https://api.ivao.aero/v2/tracker/whazzup (public, 15s refresh)
+            // ──────────────────────────────────────────────────────────────────────
+            function loadIvao(map) {
+                // Stats immer laden (wie VATSIM) — Marker nur rendern wenn Netzwerk aktiv
+                fetch(IVAO_DATA_API)
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(function(data) {
+                    var clients  = data.clients || {};
+                    var pilots   = clients.pilots  || [];
+                    var atcs     = clients.atcs    || [];
+
+                    // Stats + Dot immer aktualisieren, unabhängig von showIvao
+                    var statsEl = document.getElementById('ivaoStats');
+                    var dotEl   = document.getElementById('ivaoNetDot');
+                    if (statsEl) statsEl.textContent = '\u2708' + pilots.length + '  \uD83C\uDFA7' + atcs.length;
+                    if (dotEl)   dotEl.style.background = '#fff';
+
+                    // Marker + Layer nur rendern wenn IVAO-Netzwerk aktiviert ist
+                    if (!showIvao) return;
+
+                    ivaoPilotsLayer.clearLayers();
+                    ivaoCtrlLayer.clearLayers();
+                    ivaoSectorLayer.clearLayers();
+
+                    // IVAO ATC Position-Typ → facility-Nummer (wie VATSIM)
+                    var IVAO_FAC = {
+                        'DEL': 2, 'GND': 3, 'TWR': 4,
+                        'APP': 5, 'DEP': 5, 'CTR': 6, 'FSS': 1,
+                    };
+
+                    // ── Piloten ──
+                    pilots.forEach(function(p) {
+                        var trk = p.lastTrack || {};
+                        var lat = parseFloat(trk.latitude);
+                        var lon = parseFloat(trk.longitude);
+                        if (isNaN(lat) || isNaN(lon)) return;
+                        var fp   = p.flightPlan || {};
+                        var dep  = fp.departureId  || '—';
+                        var arr  = fp.arrivalId    || '—';
+                        var ac   = (fp.aircraft && fp.aircraft.icaoCode) || '—';
+                        var hdg  = trk.heading != null ? trk.heading : 0;
+                        var alt  = trk.altitude   || 0;
+                        var spd  = trk.groundSpeed || 0;
+
+                        var popupHtml =
+                            '<div class="vatsim-popup">' +
+                            '<div class="vatsim-popup-header">' +
+                                buildLogoHtml(p.callsign) +
+                                '<div class="vatsim-popup-callsign">' + p.callsign + '</div>' +
+                                '<div class="vatsim-popup-route">' + dep + ' &rsaquo; ' + arr + '</div>' +
+                                '<div style="font-size:9px;font-weight:700;color:#e67e22;margin-top:2px">IVAO</div>' +
+                            '</div>' +
+                            '<div class="vatsim-popup-body">' +
+                                vRow('Aircraft', ac) +
+                                vRow('Altitude', alt ? alt.toLocaleString() + ' ft' : '—') +
+                                vRow('Speed',    spd ? spd + ' kts' : '—') +
+                                vRow('Heading',  hdg + '°') +
+                                vRow('Pilot',    p.userId || '—') +
+                            '</div></div>';
+
+                        var marker = L.marker([lat, lon], {
+                            icon:  buildIvaoAircraftIcon(hdg),
+                            title: p.callsign,
+                        }).bindPopup(popupHtml, { maxWidth: 280 });
+
+                        // Klick → Route-Linie zum Ziel
+                        if (arr && arr !== '—') {
+                            marker.on('click', function() {
+                                routeLineLayer.clearLayers();
+                                lastDrawnArr = arr;
+                                showRouteLine(map, [lat, lon], arr);
+                            });
+                        }
+                        marker.addTo(ivaoPilotsLayer);
+                    });
+
+                    // ── Controller ──
+                    // IVAO-ATCs haben die Position direkt in lastTrack (kein separates Transceivers-API)
+                    var ivaoAirportGroups = {}; // icao → { ctrls: [], atisLines: [] }
+                    var ivaoFirMap        = {};
+
+                    atcs.forEach(function(c) {
+                        var trk      = c.lastTrack    || {};
+                        var sess     = c.atcSession   || {};
+                        var posType  = (sess.position || 'OBS').toUpperCase();
+                        var facility = IVAO_FAC[posType] || 0;
+                        var freq     = sess.frequency || '';
+                        var cs       = c.callsign || '';
+                        var lat      = parseFloat(trk.latitude);
+                        var lon      = parseFloat(trk.longitude);
+
+                        if (facility === 0) return; // OBS überspringen
+
+                        // ATIS (bei IVAO eingebettet im ATC-Objekt)
+                        var atisLines = (c.atis && Array.isArray(c.atis.lines)) ? c.atis.lines : [];
+                        var atisText  = atisLines.join(' ');
+
+                        if (facility === 6 || facility === 1) {
+                            // CTR / FSS → FIR-Karte
+                            var root = cs.split('_')[0].toUpperCase();
+                            var isUpper = !!UPPER_FIR[root];
+                            // IVAO CTR-Farbe: leicht andere Tönung als VATSIM (#16a085 vs #1abc9c)
+                            var firColor = isUpper ? '#8e44ad' : '#16a085';
+                            if (!ivaoFirMap[root]) {
+                                ivaoFirMap[root] = {
+                                    callsign:   cs,
+                                    frequency:  freq,
+                                    color:      firColor,
+                                    isUpper:    isUpper,
+                                    root:       root,
+                                    network:    'IVAO',
+                                };
+                            }
+                        } else if (!isNaN(lat) && !isNaN(lon)) {
+                            // TWR/APP/GND/DEL → Airport-Gruppe
+                            var icaoRaw = cs.split('_')[0].toUpperCase();
+                            if (!ivaoAirportGroups[icaoRaw]) {
+                                ivaoAirportGroups[icaoRaw] = {
+                                    pos:   [lat, lon],
+                                    ctrls: [],
+                                    atis:  [],
+                                };
+                            }
+                            ivaoAirportGroups[icaoRaw].ctrls.push({
+                                callsign: cs,
+                                facility: facility,
+                                frequency: freq,
+                                name: c.userId || '',
+                                rating: c.rating || 0,
+                                logon_time: c.createdAt || '',
+                            });
+                            if (atisText) {
+                                ivaoAirportGroups[icaoRaw].atis.push({
+                                    callsign:  cs,
+                                    frequency: freq,
+                                    text_atis: atisLines,
+                                });
+                            }
+                        }
+                    });
+
+                    // Airport-Marker (IVAO-Stil: orange Rahmen)
+                    Object.keys(ivaoAirportGroups).forEach(function(icao) {
+                        var group = ivaoAirportGroups[icao];
+                        var pos   = group.pos;
+                        // VATSpy-Position bevorzugen wenn vorhanden
+                        if (staticAirportPos[icao]) pos = staticAirportPos[icao];
+
+                        // Kompaktes Icon mit "IV" Badge für IVAO-Kennzeichnung
+                        var icon = buildAirportCtrlIconIvao(icao, group.ctrls, group.atis);
+                        var popup = buildAirportCtrlPopupIvao(icao, group.ctrls, group.atis);
+                        L.marker(pos, { icon: icon, title: icao, zIndexOffset: 490 })
+                            .bindPopup(popup, { maxWidth: 300 })
+                            .addTo(ivaoCtrlLayer);
+                    });
+
+                    // FIR-Sektoren (IVAO) — gleiche GeoJSON, andere Farbe
+                    if (vatsimShowSectors) {
+                        renderActiveSectors(ivaoFirMap, ivaoSectorLayer);
+                    }
+
+                    // Layer-Sichtbarkeit
+                    if (typeof applyLayerVisibility === 'function') applyLayerVisibility();
+
+                    console.log('[IVAO] ' + pilots.length + ' pilots, ' + atcs.length + ' controllers');
+                })
+                .catch(function(err) {
+                    console.error('[IVAO] Error:', err);
+                    var statsEl = document.getElementById('ivaoStats');
+                    if (statsEl) statsEl.textContent = '⚠ Error';
                 });
             }
 
@@ -1892,14 +2733,25 @@
                     loadVatsim(map);
                     setInterval(function() { loadVatsim(map); }, VATSIM_REFRESH_MS);
 
+                    // IVAO: immer laden (Stats), Marker nur wenn showIvao aktiv
+                    loadIvao(map);
+                    setInterval(function() { loadIvao(map); }, IVAO_REFRESH_MS);
+
                     // Zoom-basierte Sichtbarkeit
                     map.on('zoomend', function() { updateCtrlZoom(map); });
 
-                    // ── Karte klicken → Route-Linie entfernen ──
-                    // Einmalig registriert (nicht innerhalb showRouteLine, um Listener-Akkumulation zu vermeiden)
+                    // ── Karte klicken → Route-Linie + VA-Info-Card schließen ──
                     map.on('click', function() {
+                        drawSeq++;
                         routeLineLayer.clearLayers();
                         lastDrawnArr = null;
+                        // VA-Panel-Card schließen falls offen
+                        var vc = document.getElementById('va-info-card');
+                        if (vc && vc.style.display !== 'none') {
+                            vc.style.display = 'none';
+                            var rows = document.querySelectorAll('#va-flights-rows .active-flight');
+                            rows.forEach(function(r) { r.classList.remove('active-flight'); });
+                        }
                     });
 
                     // ── VA-Flugzeug: phpVMS-Icon durch VA-SVG-Icon ersetzen ──
@@ -1924,6 +2776,107 @@
                     // ── layeradd-Hook: VA-Marker erkennen, Icon ersetzen, Klick-Handler registrieren ──
                     var infoBox = document.getElementById('map-info-box');
 
+                    // drawSeq: bei jedem VA-Klick hochzählen → laufende tryDraw-Callbacks
+                    // aus vorherigen Klicks erkennen und abbrechen (verhindert falschen Airport)
+                    var drawSeq = 0;
+
+                    // Cache: Callsign → Leaflet-Marker (für Panel-Row-Klick)
+                    var vaMarkerCache = {};
+
+                    // ── VA Panel Info Card: direkt befüllen ohne Rivets ──
+                    window.vaInfoCardClose = function() {
+                        var card = document.getElementById('va-info-card');
+                        if (card) card.style.display = 'none';
+                        // Route-Linie entfernen
+                        drawSeq++;
+                        routeLineLayer.clearLayers();
+                        lastDrawnArr = null;
+                        // aktive Zeile im Panel zurücksetzen
+                        var rows = document.querySelectorAll('#va-flights-rows .active-flight');
+                        rows.forEach(function(r) { r.classList.remove('active-flight'); });
+                    };
+
+                    window.vaInfoCardOpen = function(flight, lat, lng) {
+                        var dep  = (flight.dpt_airport && (flight.dpt_airport.icao || flight.dpt_airport.id)) || '—';
+                        var arr  = (flight.arr_airport  && (flight.arr_airport.icao  || flight.arr_airport.id))  || '—';
+                        var cs   = (flight.airline && flight.airline.icao ? flight.airline.icao : '') +
+                                   (flight.flight_number || flight.callsign || '');
+                        var reg  = (flight.aircraft && flight.aircraft.registration) || '';
+                        var ac   = (flight.aircraft && flight.aircraft.icao) || '';
+                        var alt  = (flight.position && flight.position.altitude)
+                                     ? parseInt(flight.position.altitude).toLocaleString() + ' ft' : '—';
+                        var spd  = (flight.position && flight.position.gs)
+                                     ? flight.position.gs + ' kts' : '—';
+                        var stat = (window.translateStatus || function(s){return s;})(flight.status_text || flight.status || '—');
+                        var pilot = '—';
+                        if (flight.user) {
+                            pilot = flight.user.name
+                                  || (flight.user.first_name
+                                      ? flight.user.first_name + (flight.user.last_name ? ' ' + flight.user.last_name.charAt(0) + '.' : '')
+                                      : '') || '—';
+                        } else if (flight.pilot) {
+                            pilot = flight.pilot.name || flight.pilot.first_name || '—';
+                        }
+
+                        // Elemente befüllen
+                        var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+                        set('va-info-route',    dep + ' › ' + arr);
+                        set('va-info-callsign', cs || '—');
+                        set('va-info-aircraft', reg ? reg + (ac ? ' (' + ac + ')' : '') : (ac || '—'));
+                        set('va-info-alt',      alt);
+                        set('va-info-spd',      spd);
+                        set('va-info-pilot',    '✈ ' + pilot);
+
+                        // Status-Badge
+                        var badge = document.getElementById('va-info-status');
+                        if (badge) {
+                            badge.textContent   = stat;
+                            badge.setAttribute('data-status', stat);
+                        }
+
+                        // Airline-Logo
+                        var logo = document.getElementById('va-info-logo');
+                        if (logo && flight.airline && flight.airline.logo) {
+                            logo.src = flight.airline.logo.replace(/^http:\/\//i, 'https://');
+                            logo.style.display = 'block';
+                        } else if (logo) {
+                            logo.style.display = 'none';
+                        }
+
+                        // Karte zu Flugzeug-Position
+                        if (lat !== null && lng !== null) {
+                            map.setView([lat, lng], Math.max(map.getZoom(), 7), { animate: true });
+                        }
+
+                        // Route-Linie zeichnen
+                        if (lat !== null && lng !== null && arr && arr !== '—') {
+                            drawSeq++;
+                            routeLineLayer.clearLayers();
+                            lastDrawnArr = null;
+                            showRouteLine(map, L.latLng(lat, lng), arr);
+                        }
+
+                        // Card anzeigen (Rivets-Card verstecken falls sichtbar)
+                        var rivCard = document.getElementById('map-info-box');
+                        if (rivCard) rivCard.style.display = 'none';
+                        var card = document.getElementById('va-info-card');
+                        if (card) card.style.display = 'block';
+                    };
+
+                    // Wenn Rivets-Card durch normalen Marker-Klick wieder sichtbar wird →
+                    // VA-Card verstecken (MutationObserver)
+                    (function() {
+                        var rivCard = document.getElementById('map-info-box');
+                        if (!rivCard) return;
+                        var obs = new MutationObserver(function() {
+                            if (rivCard.style.display !== 'none' && getComputedStyle(rivCard).display !== 'none') {
+                                var vc = document.getElementById('va-info-card');
+                                if (vc) vc.style.display = 'none';
+                            }
+                        });
+                        obs.observe(rivCard, { attributes: true, attributeFilter: ['style', 'class'] });
+                    })();
+
                     map.on('layeradd', function(e) {
                         var layer = e.layer;
                         if (!layer || !layer.getIcon) return;
@@ -1936,16 +2889,52 @@
                             layer.setIcon(makeVaIcon());
                             layer.setZIndexOffset(10000);
 
+                            // Marker per Callsign im Cache speichern
+                            var cs = (layer.options && layer.options.title) || '';
+                            if (cs) vaMarkerCache[cs] = layer;
+
                             // Klick auf VA-Marker → Route-Linie zum Zielflughafen zeichnen
                             layer.on('click', function(ev) {
-                                L.DomEvent.stopPropagation(ev); // verhindert gleichzeitigen Karten-Klick
-                                var pos = layer.getLatLng();
-                                // Rivets befüllt die Info-Card async → kurzes Timeout abwarten
-                                setTimeout(function() {
+                                // stopPropagation nur bei echten DOM-Klicks — verhindert
+                                // dass map.on('click') die Route-Linie direkt wieder löscht.
+                                // Bei synthetischen Events (marker.fire) gibt es kein originalEvent.
+                                if (ev && ev.originalEvent) {
+                                    L.DomEvent.stopPropagation(ev);
+                                }
+
+                                // Linie SOFORT löschen und neuen Draw-Slot öffnen
+                                routeLineLayer.clearLayers();
+                                lastDrawnArr = null;
+                                drawSeq++;                          // alle laufenden tryDraw invalidieren
+                                var mySeq    = drawSeq;
+                                var pos      = layer.getLatLng();
+                                var callsign = (layer.options && layer.options.title) || '';
+
+                                // Rivets befüllt die Info-Card async.
+                                // Strategie: immer mind. 150ms warten, dann bis zu 15× alle 80ms prüfen.
+                                // Abbruch sobald mySeq !== drawSeq (anderes Flugzeug wurde geklickt).
+                                var attempts = 0;
+                                function tryDraw() {
+                                    if (mySeq !== drawSeq) return; // neuerer Klick → abbrechen
                                     if (!infoBox) return;
+                                    var csEl    = infoBox.querySelector('.map-info-callsign');
                                     var routeEl = infoBox.querySelector('.map-info-route-big');
-                                    if (!routeEl) return;
-                                    // Route-Text parsen: "EDJA › EGSS" → Arrival = "EGSS"
+                                    if (!routeEl) {
+                                        if (attempts++ < 15) setTimeout(tryDraw, 80);
+                                        return;
+                                    }
+
+                                    // Wenn Callsign bekannt: warten bis Card dieses Flugzeug zeigt
+                                    var cardCallsign = csEl ? csEl.textContent.trim() : '';
+                                    if (callsign && cardCallsign && cardCallsign !== callsign) {
+                                        if (attempts++ < 15) setTimeout(tryDraw, 80);
+                                        return;
+                                    }
+
+                                    // Nochmals seq prüfen — könnte zwischen dem letzten Check und
+                                    // jetzt ein anderer Klick reingekommen sein
+                                    if (mySeq !== drawSeq) return;
+
                                     var parts = (routeEl.textContent || '').split('›');
                                     if (parts.length < 2) return;
                                     var arr = parts[1].trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -1953,7 +2942,8 @@
                                         lastDrawnArr = arr;
                                         showRouteLine(map, pos, arr);
                                     }
-                                }, 200);
+                                }
+                                setTimeout(tryDraw, 150); // immer 150ms warten bevor erster Versuch
                             });
                         } catch(err) {}
                     });
@@ -2004,7 +2994,59 @@
                         };
                     }
 
-                    // ── Toggle-Buttons für VATSIM-Layer und Follow Flight ──
+                    // ── Hilfsfunktionen: Layer-Sichtbarkeit nach Toggle aktualisieren ──
+                    function applyLayerVisibility() {
+                        // Piloten
+                        if (vatsimShowPilots && showVatsim) { if (!map.hasLayer(vatsimPilotsLayer)) vatsimPilotsLayer.addTo(map); }
+                        else map.removeLayer(vatsimPilotsLayer);
+                        if (vatsimShowPilots && showIvao)   { if (!map.hasLayer(ivaoPilotsLayer))   ivaoPilotsLayer.addTo(map); }
+                        else map.removeLayer(ivaoPilotsLayer);
+                        // Controller
+                        if (vatsimShowCtrl && showVatsim) { if (!map.hasLayer(vatsimCtrlLayer)) vatsimCtrlLayer.addTo(map); }
+                        else map.removeLayer(vatsimCtrlLayer);
+                        if (vatsimShowCtrl && showIvao)   { if (!map.hasLayer(ivaoCtrlLayer))   ivaoCtrlLayer.addTo(map); }
+                        else map.removeLayer(ivaoCtrlLayer);
+                        // Sektoren
+                        if (vatsimShowSectors && showVatsim) { if (!map.hasLayer(vatsimSectorLayer)) vatsimSectorLayer.addTo(map); }
+                        else map.removeLayer(vatsimSectorLayer);
+                        if (vatsimShowSectors && showIvao)   { if (!map.hasLayer(ivaoSectorLayer))   ivaoSectorLayer.addTo(map); }
+                        else map.removeLayer(ivaoSectorLayer);
+                    }
+
+                    // ── Netzwerk-Toggles ──
+                    var btnNetVatsim = document.getElementById('btnNetVatsim');
+                    var btnNetIvao   = document.getElementById('btnNetIvao');
+
+                    if (btnNetVatsim) {
+                        btnNetVatsim.addEventListener('click', function() {
+                            showVatsim = !showVatsim;
+                            btnNetVatsim.style.opacity = showVatsim ? '1' : '.45';
+                            if (!showVatsim) {
+                                map.removeLayer(vatsimPilotsLayer);
+                                map.removeLayer(vatsimCtrlLayer);
+                                map.removeLayer(vatsimSectorLayer);
+                            } else {
+                                applyLayerVisibility();
+                            }
+                        });
+                    }
+                    if (btnNetIvao) {
+                        btnNetIvao.addEventListener('click', function() {
+                            showIvao = !showIvao;
+                            btnNetIvao.style.opacity = showIvao ? '1' : '.45';
+                            if (!showIvao) {
+                                // Marker entfernen, aber Stats-Zahlen stehen lassen
+                                map.removeLayer(ivaoPilotsLayer);
+                                map.removeLayer(ivaoCtrlLayer);
+                                map.removeLayer(ivaoSectorLayer);
+                            } else {
+                                loadIvao(map); // sofort Marker laden wenn aktiviert
+                                applyLayerVisibility();
+                            }
+                        });
+                    }
+
+                    // ── Layer-Toggle-Buttons (Pilots / Controllers / FIR Sectors) ──
                     var btnPilots  = document.getElementById('btnVatsimPilots');
                     var btnCtrl    = document.getElementById('btnVatsimCtrl');
                     var btnSectors = document.getElementById('btnVatsimSectors');
@@ -2013,22 +3055,22 @@
                     if (btnPilots) {
                         btnPilots.addEventListener('click', function() {
                             vatsimShowPilots = !vatsimShowPilots;
-                            if (vatsimShowPilots) { vatsimPilotsLayer.addTo(map); btnPilots.classList.add('active'); }
-                            else                  { map.removeLayer(vatsimPilotsLayer); btnPilots.classList.remove('active'); }
+                            btnPilots.classList.toggle('active', vatsimShowPilots);
+                            applyLayerVisibility();
                         });
                     }
                     if (btnCtrl) {
                         btnCtrl.addEventListener('click', function() {
                             vatsimShowCtrl = !vatsimShowCtrl;
-                            if (vatsimShowCtrl) { vatsimCtrlLayer.addTo(map); btnCtrl.classList.add('active'); }
-                            else                { map.removeLayer(vatsimCtrlLayer); btnCtrl.classList.remove('active'); }
+                            btnCtrl.classList.toggle('active', vatsimShowCtrl);
+                            applyLayerVisibility();
                         });
                     }
                     if (btnSectors) {
                         btnSectors.addEventListener('click', function() {
                             vatsimShowSectors = !vatsimShowSectors;
-                            if (vatsimShowSectors) { vatsimSectorLayer.addTo(map); btnSectors.classList.add('active'); }
-                            else                   { map.removeLayer(vatsimSectorLayer); btnSectors.classList.remove('active'); }
+                            btnSectors.classList.toggle('active', vatsimShowSectors);
+                            applyLayerVisibility();
                         });
                     }
                     if (btnFollow) {

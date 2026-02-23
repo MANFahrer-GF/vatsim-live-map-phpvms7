@@ -1,259 +1,136 @@
-# VATSIM Live Map for phpVMS 7
+# VATSIM + IVAO Live Map for phpVMS 7
 
-A fully featured live map override for [phpVMS 7](https://github.com/phpvms/phpvms) that adds real-time VATSIM integration, weather overlays, and a modern popup design.
+A feature-rich live map widget for phpVMS 7 that integrates real-time **VATSIM and IVAO** data alongside your Virtual Airline flights — with an active VA flights panel, route lines, weather overlays, and dark mode.
 
-> **Weather overlay concept** based on [Weather Overlay on the Live Map](https://github.com/ncd200/Weather-Overlay-on-the-Live_Map) by **Rick Winkelman (Air Berlin Virtual)**
+![Live Map Screenshot](screenshot.png)
 
----
-
-## 🌍 Live Demo
-
-**[Live Karte - German Sky Group](https://german-sky-group.eu/livemap)**
-
-![VATSIM Live Map Screenshot](screenshot.png)
+**Live Demo:** [german-sky-group.eu/livemap](https://german-sky-group.eu/livemap)
 
 ---
 
-## 📦 Installation
+## Features
 
-This repo contains a **single file**: `live_map.blade.php`
+### Dual Network — VATSIM + IVAO
+- **VATSIM & IVAO simultaneously** — toggle each network on/off independently; stats (pilots / controllers) always shown even when a network is hidden
+- **Color-coded markers** — VATSIM pilots in blue, IVAO pilots in orange; instantly distinguishable at a glance
+- **Independent refresh cycles** — VATSIM refreshes every 30 s, IVAO every 15 s
+- **FIR Sectors** — Active airspace boundaries from VATSpy GeoJSON for both networks
 
-Copy it to the correct path depending on your theme:
+### VATSIM
+- Real-time pilot positions with callsign, route, aircraft type, altitude, speed, heading and pilot name
+- Airport markers with colour-coded controller badges: Delivery, Ground, Tower, Approach/ATIS, Center
+- TRACON / Approach Control auto-merged into nearest airport marker (within 80 km)
+- ATIS collapsible (60-char preview + "Show full ATIS")
+- Full airport names from VATSpy data in popups
+- Controller name, CID, rating, and online time in popups
+
+### IVAO
+- Real-time pilot positions with flight plan data
+- Airport markers with orange-outline IVAO badge style
+- ATC positions mapped to IVAO facility types (DEL/GND/TWR/APP/DEP/CTR/FSS)
+
+### VA Active Flights Panel
+- **Top-centre collapsible panel** listing all active phpVMS/ACARS flights
+- Columns: Flight · Route · Aircraft · Altitude · Speed · Distance · Status · Pilot
+- Click any row → map zooms to aircraft + dedicated info card opens with full flight details + dashed route line to destination
+- Live badge showing total active flight count
+- Refreshes in sync with your ACARS update interval
+
+### Route Lines & Info Card
+- Click any VA aircraft on the map for a dashed red route line to the destination airport
+- **VA Info Card** — dedicated card (top-right) filled directly from ACARS API data, independent of the phpVMS Rivets binding — works reliably every time
+- Destination airport highlighted with a red ICAO badge
+- Close button on card; clicking the map also clears the route line
+
+### Weather Overlays
+- 6 OWM layers: Clouds, Radar, Storms, Wind, Temperature, Combo
+- Opacity slider
+- **Dark Map** — CSS night mode with persistent state (localStorage)
+
+### General
+- Follow Flight — keeps map centred on active VA flights
+- Badge legend showing all controller badge types
+- Airline logos from your phpVMS airline database
+- All UI labels in English
+
+---
+
+## Requirements
+
+- phpVMS 7 (any recent version)
+- HTTPS (required for VATSIM/IVAO APIs and OWM tiles)
+- OpenWeatherMap API key (free) — **optional**, only needed for weather overlays
+
+---
+
+## Installation
+
+Copy `live_map.blade.php` to the correct path for your theme:
 
 | Theme | Path |
 |-------|------|
-| **seven** (default) | `resources/views/layouts/seven/widgets/live_map.blade.php` |
-| **beta** | `resources/views/layouts/beta/widgets/live_map.blade.php` |
-| **default** | `resources/views/layouts/default/widgets/live_map.blade.php` |
-| **SPTheme** | `resources/views/layouts/SPTheme/widgets/live_map.blade.php` |
-| **Disposable_v3** | `resources/views/layouts/Disposable_v3/widgets/live_map.blade.php` |
+| seven (default) | `resources/views/layouts/seven/widgets/live_map.blade.php` |
+| beta | `resources/views/layouts/beta/widgets/live_map.blade.php` |
+| default | `resources/views/layouts/default/widgets/live_map.blade.php` |
+| SPTheme | `resources/views/layouts/SPTheme/widgets/live_map.blade.php` |
+| Disposable_v3 | `resources/views/layouts/Disposable_v3/widgets/live_map.blade.php` |
 
-> Not sure which theme you use? Check your phpVMS Admin → Settings → General → Theme.
+> The file is identical for all themes — only the installation path differs.
 
 ---
 
-## 🔑 OpenWeatherMap API Key (required for weather overlays)
+## OpenWeatherMap API Key (optional)
 
-1. Register for free at [openweathermap.org](https://home.openweathermap.org/users/sign_up)
-2. Open `live_map.blade.php` and go to **line 750** — you will find:
+Weather overlays require a free API key from [openweathermap.org](https://openweathermap.org/api).
+
+Open `live_map.blade.php` and find this line near the top of the `<script>` section:
+
 ```javascript
 var OWM_API_KEY = "YOUR_OPENWEATHERMAP_API_KEY_HERE";
 ```
-3. Replace `YOUR_OPENWEATHERMAP_API_KEY_HERE` with your key:
-```javascript
-var OWM_API_KEY = "abc123yourkeyhere";
-```
 
-**Quick way to find it:** Open the file in any text editor and use **Search / Find** (`Ctrl+F` on Windows, `Cmd+F` on Mac) and search for:
-```
-YOUR_OPENWEATHERMAP_API_KEY_HERE
-```
-It will jump directly to the correct line.
-
-> ⚠️ Without a valid key the weather buttons are hidden automatically — the map works fully without weather.
+Replace `YOUR_OPENWEATHERMAP_API_KEY_HERE` with your key. If you leave the placeholder, all weather buttons are hidden automatically — no errors.
 
 ---
 
-## ✨ Features
+## IVAO
 
-### VATSIM Integration
-- Live pilots with aircraft icons rotated by heading
-- Controllers with color-coded badges (DEL / GND / TWR / APP / CTR)
-- FIR/UIR sector boundaries from VATSpy data
-- TRACON / Approach Control automatically merged into the nearest airport marker
-- ATIS collapsed by default, expandable — no more giant popups
-- Full airport name in controller popups
-- Refreshes every 30 seconds
-
-### Badge Legend (built into VATSIM panel)
-| Badge | Color | Meaning |
-|-------|-------|---------|
-| **D** | 🔵 Blue | Delivery |
-| **G** | 🟠 Orange | Ground |
-| **T** | 🔴 Red | Tower |
-| **Ai** | 🟢 Green | Approach + ATIS |
-| **C** | 🩵 Teal | Center / FIR |
-| **i** | 💙 Light Blue | ATIS only |
-
-### Own VA Flights
-- Large distinctive aircraft icon — always visible above VATSIM traffic
-- Click any aircraft → dashed route line to destination airport
-- Follow Flight toggle — auto-pan or scroll freely
-
-### Weather Overlays
-- Clouds, Radar, Storms, Wind, Temperature, Combo layers
-- Opacity slider + Dark map toggle
-
-### Popup Design
-- Card-style popups for pilots, controllers and FIR sectors
-- Airline logos loaded from your own phpVMS database (always current)
-- Badge legend built into the VATSIM panel
-
-### Airline Logos in VATSIM Popups
-
-When a VATSIM pilot's callsign matches an airline in your phpVMS database, their logo is automatically shown in the popup.
-
-**How it works:**
-The map reads the first 3 letters of the VATSIM callsign (the ICAO airline code, e.g. `DLH` from `DLH187`) and looks for a matching airline in your phpVMS database. If found **and** that airline has a logo uploaded, it is displayed in the popup.
-
-**Requirements:**
-1. The airline must be created in your phpVMS Admin → **Airlines**
-2. The airline's **ICAO code** must match the VATSIM callsign prefix (e.g. `DLH` for Lufthansa)
-3. A **logo must be uploaded** for that airline in phpVMS
-
-**Example:**
-- VATSIM flight `DLH187` → ICAO prefix `DLH` → phpVMS finds airline "Lufthansa" with ICAO `DLH` → logo shown ✅
-- VATSIM flight `RYR123` → ICAO prefix `RYR` → airline not in your phpVMS database → no logo shown, popup works normally ✅
-
-> This means logos only appear for airlines you have configured in your VA. This is intentional — your phpVMS database always has up-to-date, correct logos since you manage them yourself. External logo CDNs often have outdated or incorrect logos (e.g. old Lufthansa yellow crane instead of the current blue one).
+IVAO data is fetched from the public IVAO Tracker API (`https://api.ivao.aero/v2/tracker/whazzup`). No API key required. Pilot/controller stats are always loaded in the background regardless of whether the IVAO network toggle is active.
 
 ---
 
-## 🎛️ VATSIM Control Panel — Button Guide
+## Configuration
 
-The VATSIM panel is displayed in the bottom-right corner of the map. Here is what each button does:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OWM_API_KEY` | `"YOUR_..."` | OpenWeatherMap key (optional) |
+| `VATSIM_REFRESH_MS` | `30000` | VATSIM refresh interval in ms |
+| `IVAO_REFRESH_MS` | `15000` | IVAO refresh interval in ms |
 
----
-
-### ✈️ Pilots
-**Toggles the display of all VATSIM pilots on the map.**
-
-- When active: every pilot currently connected to VATSIM and airborne is shown as a small blue aircraft icon, rotated according to their heading
-- Clicking a pilot marker opens a popup showing: callsign, route (departure › arrival), aircraft type, altitude, speed, heading and pilot name
-- If the airline exists in your phpVMS database with a logo, the logo is shown at the top of the popup
-- Clicking a pilot also draws a **dashed red line** from the aircraft to its destination airport
-
-> Turning this off is recommended when you only want to monitor controllers — with 800+ pilots worldwide the map can get very busy.
+The VA flights panel refresh interval uses your phpVMS `acars.update_interval` setting automatically.
 
 ---
 
-### 🎧 Controllers
-**Toggles the display of all active VATSIM ATC stations on the map.**
+## Compatibility
 
-- Each airport with active controllers gets a marker showing color-coded badges (see badge legend below)
-- Clicking an airport marker opens a popup with all active controllers at that airport, their frequencies, ratings, and how long they have been online
-- ATIS information is shown collapsed — click **"Show full ATIS"** to expand the full text
-- TRACON / Approach Control stations that are not tied to a specific airport are automatically placed at the nearest airport within 80km
-
-> This layer is active by default on page load.
+Tested with:
+- phpVMS 7 (dev branch)
+- Themes: seven, Disposable_v3, SPTheme
+- ACARS clients: vmsACARS, smartCARS 3
 
 ---
 
-### 🗺️ FIR Sectors
-**Toggles the display of FIR (Flight Information Region) and UIR sector boundaries.**
+## Credits
 
-- Draws the airspace boundaries for active Center / FIR controllers as colored, semi-transparent polygons on the map
-- Each polygon is clickable and shows the controller info for that sector
-- Multiple sub-sectors (e.g. EDMM-GER, EDMM-HOF) are shown as separate polygons but share one popup
-- The sector label (callsign + frequency) is shown at the center of the largest sub-sector
-
-> Very useful for seeing at a glance which regions have active radar coverage.
-
----
-
-### 🎯 Follow Flight
-**Controls whether the map automatically adjusts to show all active VA flights.**
-
-- **Active (green — "Follow Flight"):** phpVMS controls the map view automatically
-  - If **one** VA pilot is online: the map pans to keep that aircraft in view
-  - If **multiple** VA pilots are online simultaneously: the map zooms out and adjusts so **all VA aircraft are visible** at the same time
-  - The view updates automatically as aircraft move
-  - If **no VA flights are active**: the map returns to the default position and zoom level set in the phpVMS Admin Panel after a short time
-- **Inactive (grey — "Free Scroll"):** the map stays exactly where you left it — you can scroll, pan and zoom freely without the camera jumping back
-
-> This button does **not** follow a single specific pilot — it always tries to show **all currently active VA flights** in one view. If you want to look at a specific area (e.g. VATSIM traffic in Europe) simply deactivate Follow Flight first.
+- [VATSIM](https://vatsim.net/) — live network data
+- [IVAO](https://ivao.aero/) — live network data
+- [VATSpy Data Project](https://github.com/vatsimnetwork/vatspy-data-project) — FIR boundaries and airport positions
+- [Leaflet](https://leafletjs.com/) — map library
+- [OpenWeatherMap](https://openweathermap.org/) — weather tile layers
+- [phpVMS](https://phpvms.net/) — virtual airline management platform
 
 ---
 
-### ⚙️ Default Map Position (Admin Panel)
+## License
 
-The default center and zoom level when no VA flights are active is configured in your phpVMS Admin Panel under **Admin → ACARS**:
-
-| Setting | Description |
-|---------|-------------|
-| **Center Coords** | Where the map returns to when no flights are active (`LAT,LON`) |
-| **Default Zoom** | Initial zoom level |
-| **Live Time** | How many hours old a flight can be before it disappears from the map (`0` = only in-progress flights) |
-| **Refresh Interval** | How often the VA flight data updates (in seconds) |
-
-**Recommended settings for a German VA:**
-```
-Center Coords:  51.1657,10.4515
-Default Zoom:   5
-Live Time:      0
-Refresh Interval: 60
-```
-> Zoom 5 shows all of Germany plus surrounding countries — perfect starting view for a German VA.
-
----
-
-### 📍 Route Line (click on any aircraft)
-**Not a button — activated by clicking on any aircraft marker.**
-
-- Click any VATSIM pilot or your own VA aircraft → a dashed red line is drawn from the aircraft to its filed destination airport
-- The destination ICAO code is shown as a small label at the airport
-- Click anywhere on the map to remove the line
-
----
-
-### 🌦️ Weather Layers (bottom-left panel)
-
-| Button | Shows |
-|--------|-------|
-| **Clouds** | Cloud coverage overlay |
-| **Radar** | Precipitation radar |
-| **Storms** | Thunderstorm cells |
-| **Wind** | Wind speed & direction |
-| **Temp** | Temperature overlay |
-| **Combo** | Clouds + precipitation combined |
-| **Dark map** | Switches the base map to a dark/night style |
-| **Opacity slider** | Adjusts transparency of the active weather layer |
-
-> Requires a free OpenWeatherMap API key — see setup instructions above.
-
----
-
-Find these variables near the top of the `<script>` block:
-
-```javascript
-// VATSIM refresh interval in ms (VATSIM policy minimum = 15000)
-var VATSIM_REFRESH_MS = 30000;
-
-// Default layer visibility on page load
-var vatsimShowPilots  = false;   // Pilots
-var vatsimShowCtrl    = true;    // Controllers
-var vatsimShowSectors = false;   // FIR Sectors
-```
-
----
-
-## 🗺️ Data Sources
-
-| Source | Purpose |
-|--------|---------|
-| [VATSIM Data API v3](https://data.vatsim.net/v3/vatsim-data.json) | Live pilots & controllers |
-| [VATSpy Data Project](https://github.com/vatsimnetwork/vatspy-data-project) | Airport positions & FIR boundaries |
-| [VATSIM Transceivers](https://data.vatsim.net/v3/transceivers-data.json) | Fallback controller positions |
-| [OpenWeatherMap](https://openweathermap.org/api/weathermaps) | Weather overlays |
-| phpVMS database | Airline logos |
-
----
-
-## 📋 Requirements
-
-- phpVMS 7 (any recent version)
-- HTTPS (required for VATSIM API and weather tiles)
-- Optional: Free [OpenWeatherMap API key](https://home.openweathermap.org/users/sign_up)
-
----
-
-## 🙏 Credits
-
-- **Weather overlay concept:** [Rick Winkelman (Air Berlin Virtual)](https://github.com/ncd200/Weather-Overlay-on-the-Live_Map)
-- **VATSIM integration & design:** German Sky Group
-
----
-
-## 📄 License
-
-MIT — free to use, modify and share. Credit appreciated.
+MIT — free to use and modify. A credit link back to this repository is appreciated but not required.
