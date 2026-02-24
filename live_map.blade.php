@@ -882,7 +882,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            console.log('[LiveMap] DOMContentLoaded');
 
             // Rivets formatters
             if (typeof rivets !== 'undefined') {
@@ -1008,7 +1007,6 @@
             }
 
             function attachWeatherToMap(map) {
-                console.log('[LiveMap] attachWeatherToMap called, map:', map);
 
                 var mapDiv = document.getElementById("map");
                 var btnDarkMap  = document.getElementById("btnDarkMap");
@@ -1468,14 +1466,12 @@
                 6: { label: 'CTR', color: '#1abc9c' },
             };
 
-            // Airline-Logo: jsDelivr CDN → github.com/sexym0nk3y/airline-logos (~900 Airlines)
-            // Kein API-Key nötig, kostenlos, sehr zuverlässig
             @php
                 try {
                     $airlineLogos = \App\Models\Airline::whereNotNull('logo')
                         ->where('logo', '!=', '')
-                        ->get(['icao','logo'])
-                        ->mapWithKeys(function($a) {
+                        ->get(['icao', 'logo'])
+                        ->mapWithKeys(function ($a) {
                             $logo = $a->logo;
                             if ($logo && !str_starts_with($logo, 'http')) {
                                 $logo = url($logo);
@@ -1485,12 +1481,13 @@
                             }
                             return [strtoupper($a->icao) => $logo];
                         })->toArray();
-                } catch(\Exception $e) {
+                } catch (\Exception $e) {
                     $airlineLogos = [];
                 }
             @endphp
-            var AIRLINE_LOGOS = {!! json_encode($airlineLogos) !!};
-            console.log('[LiveMap] Airline-Logos geladen: ' + Object.keys(AIRLINE_LOGOS).length);
+            {{-- @json() escaped — sicherer als {!! json_encode() !!} --}}
+            var AIRLINE_LOGOS = @json($airlineLogos);
+            var logosReady = Promise.resolve(); {{-- Logos sofort verfügbar (serverseitig geladen) --}}
 
             function buildLogoHtml(callsign) {
                 if (!callsign || callsign.length < 3) return '';
@@ -1792,8 +1789,6 @@
                                 }
                             }
                         });
-                        console.log('[VATSIM] VATSpy: ' + Object.keys(staticAirportPos).length +
-                            ' Airports, ' + Object.keys(firPrefixMap).length + ' FIR-Prefixes');
                     })
                     .catch(function(e) {
                         firNameLoaded = true;
@@ -2228,7 +2223,6 @@
                                 ctrlPosCache[entry.callsign.toUpperCase()] = [lat, lon];
                             }
                         });
-                        console.log('[VATSIM] Transceivers geladen: ' + Object.keys(ctrlPosCache).length + ' Einträge');
                     })
                     .catch(function(err) {
                         console.warn('[VATSIM] Transceivers nicht geladen:', err);
@@ -2525,7 +2519,6 @@
                     if (statsEl) statsEl.textContent = '\u2708' + pilots.length + '  \uD83C\uDFA7' + ctrlDone;
                     if (dotEl)   dotEl.classList.add('live');
 
-                    console.log('[VATSIM] ' + pilots.length + ' Piloten, ' + ctrlDone + ' Controller positioniert');
                 })
                 .catch(function(err) {
                     console.error('[VATSIM] Fehler:', err);
@@ -2703,7 +2696,6 @@
                     // Layer-Sichtbarkeit
                     if (typeof applyLayerVisibility === 'function') applyLayerVisibility();
 
-                    console.log('[IVAO] ' + pilots.length + ' pilots, ' + atcs.length + ' controllers');
                 })
                 .catch(function(err) {
                     console.error('[IVAO] Error:', err);
@@ -2716,26 +2708,28 @@
             if (typeof L !== 'undefined' && L.Map && typeof L.Map.addInitHook === 'function') {
 
                 // Hook 1: OWM Weather
-                console.log('[LiveMap] Registering Leaflet init hook for OWM');
                 L.Map.addInitHook(function () {
                     attachWeatherToMap(this);
                 });
 
                 // Hook 2: VATSIM-Daten + VA-Icon + Follow Flight
-                console.log('[LiveMap] Registering Leaflet init hook for VATSIM');
                 L.Map.addInitHook(function () {
                     var map = this;
 
                     // RouteLineLayer immer auf der Karte (über allem)
                     routeLineLayer.addTo(map);
 
-                    // Daten im Hintergrund laden
-                    loadVatsim(map);
-                    setInterval(function() { loadVatsim(map); }, VATSIM_REFRESH_MS);
+                    // Logos zuerst laden, dann VATSIM + IVAO starten
+                    // Promise.race mit 3s Timeout — Logos nie länger als 3s abwarten
+                    var timeout = new Promise(function(res) { setTimeout(res, 3000); });
+                    Promise.race([logosReady, timeout]).then(function() {
+                        loadVatsim(map);
+                        setInterval(function() { loadVatsim(map); }, VATSIM_REFRESH_MS);
 
-                    // IVAO: immer laden (Stats), Marker nur wenn showIvao aktiv
-                    loadIvao(map);
-                    setInterval(function() { loadIvao(map); }, IVAO_REFRESH_MS);
+                        // IVAO: immer laden (Stats), Marker nur wenn showIvao aktiv
+                        loadIvao(map);
+                        setInterval(function() { loadIvao(map); }, IVAO_REFRESH_MS);
+                    });
 
                     // Zoom-basierte Sichtbarkeit
                     map.on('zoomend', function() { updateCtrlZoom(map); });
@@ -3095,7 +3089,6 @@
                 return;
             }
 
-            console.log('[LiveMap] Calling phpvms.map.render_live_map');
 
             phpvms.map.render_live_map({
                 center: ['{{ $center[0] }}', '{{ $center[1] }}'],

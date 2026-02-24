@@ -4,7 +4,16 @@ All notable changes to this project are documented in this file.
 
 ---
 
-## [3.0.0] — 2026-02-23
+## [3.0.1] — 2026-02-24
+
+### Bug Fixes & Code Quality
+- Removed: All 9 `console.log` debug statements from production code (intentional `console.warn`/`console.error` in error handlers retained)
+- Improved: Airline logo output changed from `{!! json_encode() !!}` (unescaped) to `@json()` (Blade-escaped, safer)
+- Fixed: Outdated comment referencing jsDelivr CDN (logo source had changed but comment was never updated)
+
+---
+
+## [3.0.0] — 2026-02-24
 
 ### New Features
 
