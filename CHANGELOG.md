@@ -4,6 +4,73 @@ All notable changes to this project are documented in this file.
 
 ---
 
+## [4.0.0] — 2026-02-28
+
+### New Features
+
+#### VA Planned Flights Panel
+- **New "Planned" tab** alongside the existing "Active Flights" tab in the VA panel
+- Displays scheduled bids fetched from phpVMS `/api/user/bids`
+- **2-column grid layout** — route display spans the full panel width, details in compact columns
+- **Boarding pass–style flight info card** with animated progress bar and aircraft icon
+- Airline logos per flight loaded from phpVMS database
+- Pilot name, flight number, aircraft type, departure/destination with full airport names
+- Scheduled departure time with UTC display
+- Click any planned flight to open the matching pilot marker on the map (if active)
+
+#### Mobile Responsive Design
+- **Dedicated toggle button bar** for small screens (✈ Flights · Network)
+- VA panel, network selector and weather overlay box collapse into hidden drawers on mobile
+- Side-tab controls remain accessible without blocking the map
+- Dynamic table height adapts to viewport
+- Boarding pass card switches to single-column layout on narrow screens
+- All button and icon sizing adjusted for touch targets
+
+#### IVAO Controller Rating Badges
+- Full IVAO rating badge system: OBS → DEL → GND → TWR → APP → CTR → FSS → SUP → ADM
+- **VID links** to official IVAO tracker (`https://www.ivao.aero/Member.aspx?Id=…`)
+- Unified popup design for VATSIM and IVAO controllers (dark title bar, white content area)
+- Online time display for IVAO controllers
+
+#### Portable Domain Support
+- Removed all hardcoded domain references (`german-sky-group.eu`)
+- phpVMS API calls now use `window.location.origin` — works on **any** phpVMS installation without changes
+- `PHPVMS_BASE` config variable added for transparency
+- Clear config comment block for other admins
+
+### Security — Critical Fixes
+
+**12 XSS vulnerabilities patched** — all external API data (VATSIM, IVAO, phpVMS) was previously injected into `innerHTML` without escaping.
+
+New security helper functions:
+
+```javascript
+h(str)           // HTML-escape all innerHTML output
+safeUrl(url)     // Accept only HTTPS URLs without special characters
+safeCallsign(s)  // Allow only A–Z, 0–9, _, - (max 20 chars)
+safeFreq(s)      // Allow only digits and dot (max 8 chars)
+```
+
+| Severity | Issue | Fix |
+|----------|-------|-----|
+| 🔴 Critical | XSS via `innerHTML` — VATSIM/IVAO/phpVMS data (12 locations) | `h()` wrapper on all output |
+| 🔴 Critical | CSS injection via `querySelector` with unsanitised callsign | `safeCallsign()` whitelist |
+| 🔴 Critical | Open redirect / `javascript:` URI in IVAO VID link `href` | `safeUrl()` HTTPS-only validation |
+| 🟡 Medium | Frequency string injected without sanitising (4 locations) | `safeFreq()` numeric-only filter |
+| 🟡 Medium | Rating type coercion — string vs. number comparison | `parseInt()` coercion before comparisons |
+| 🟡 Medium | Blade variables (center lat/lng, zoom) inserted as raw strings | `parseFloat()` / `parseInt()` with safe fallbacks |
+| 🟢 Low | `target="_blank"` links missing `rel="noopener noreferrer"` | Added to all external links |
+
+### Bug Fixes
+- Fixed: Boarding pass card flickering on tab switch (CSS `visibility` instead of `display` toggle)
+- Fixed: VATSIM/IVAO controller popup rating badge not rendering at OBS level
+- Fixed: Weather/network panel not expanding on mobile due to `overflow: hidden` on parent container
+- Fixed: Airline logo fallback when logo URL returns 404
+- Fixed: Planned flights panel showing stale data after bid changes without manual refresh
+- Fixed: `⚠ Unavailable` error message replaced with `⚠ phpVMS API not reachable` for clarity
+
+---
+
 ## [3.0.1] — 2026-02-24
 
 ### Bug Fixes & Code Quality
@@ -62,14 +129,14 @@ All notable changes to this project are documented in this file.
 ## [2.0.0] — 2026-02-23
 
 ### New Features
-- **VA Flight Route Line** — Clicking a VA aircraft shows a dashed red line to the destination airport
+- **VA Flight Route Line** — clicking a VA aircraft shows a dashed red line to the destination airport
 - **VA Aircraft Icon** — phpVMS aircraft replaced with a distinctive white/blue SVG icon; rotation handled by leaflet-rotatedmarker
-- **Dark Map persistent** — Dark mode state saved to localStorage and restored on reload
+- **Dark Map persistent** — dark mode state saved to localStorage and restored on reload
 - **TRACON auto-merge** — TRACON / Approach Control facilities merged into the nearest airport marker (within 80 km)
-- **Airport full names** — Full airport names from VATSpy data shown in controller popups
+- **Airport full names** — full airport names from VATSpy data shown in controller popups
 - **ATIS collapsible** — ATIS text shows a 60-character preview with "Show full ATIS" toggle
-- **Route line destination badge** — Red ICAO label shown at the destination airport when route line is active
-- **Badge legend** — Visual reference panel showing all badge types and colours
+- **Route line destination badge** — red ICAO label shown at the destination airport when route line is active
+- **Badge legend** — visual reference panel showing all badge types and colours
 
 ### Improvements
 - Controller zoom thresholds lowered: badges visible from zoom 3, labels from zoom 5
@@ -80,7 +147,7 @@ All notable changes to this project are documented in this file.
 
 ### Bug Fixes
 - Fixed: Dark Map button had no effect when OWM API key was missing
-- Fixed: VA route line not shown on second click (scope bug in lastDrawnArr)
+- Fixed: VA route line not shown on second click (scope bug in `lastDrawnArr`)
 - Fixed: Duplicate `layeradd` handlers overwriting each other
 - Fixed: Dead variable `vaCallsignSet` causing silent ReferenceError
 
